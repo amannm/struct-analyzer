@@ -1,0 +1,158 @@
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.deepToTyped@1.0.5#/deepToTyped.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/ClassNode.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/ModuleNode.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/IdentifierNode.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/QualifiedIdentifierNode.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/TypeNode.pkl"
+import "pkl:json"
+
+local parsed = new json.Parser { useMapping = true }.parse(read("file:/dev/stdin")) as Mapping<String, Any>
+local modules: Mapping<String, Map<String, List<File>>> = new {
+  for (k, v in parsed) {
+    [k] = (v as Listing<Any>)
+      .toList()
+      .map((it)-> deepToTyped.apply(File, it) as File)
+      .groupBy((it)->it.package)
+  }
+}
+local compiledModules: Mapping<String, ModuleNode> = new {
+  for (moduleName, moduleFiles in modules) {
+    for (packageName, packageFiles in moduleFiles) {
+      ["\(moduleName)/\(packageName).pkl"] = new ModuleNode {
+        classes {
+          for (_, packageFile in packageFiles) {
+            when (packageFile.structs != null) {
+              for (structName, structSpec in packageFile.structs!!) {
+                handleStructType(structName, structSpec)
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+output {
+  files {
+    for (moduleFile, moduleBody in compiledModules) {
+      [moduleFile] = new FileOutput {
+        text = moduleBody.output.text
+      }
+    }
+  }
+  renderer = new PcfRenderer{omitNullProperties = true}
+}
+
+class File {
+  source: String
+  package: String
+  imports: Listing<Import>?
+  aliases: Mapping<String, String>?
+  structs: Mapping<String, Struct>?
+}
+
+class Import {
+  path: String
+  alias: String?
+}
+
+class Struct {
+  `extends`: Listing<String>?
+  fields: Mapping<String, Field>
+}
+
+class Field {
+  goType: String
+  tags: Listing<Tag>
+
+}
+class Tag {
+  type: String
+  argument: String?
+  options: Listing<String>?
+}
+
+local function handleStructType(typeName: String, typeSpec: Struct): ClassNode = new {
+  classHeader {
+    name = identifier(typeName)
+  }
+  properties {
+    for (fn, fv in typeSpec.fields) {
+      new {
+        name = identifier(fn)
+        typeAnnotation {
+          type = convertToPklType(fv.goType)
+        }
+      }
+    }
+  }
+}
+
+local function convertToPklType(goType: String): TypeNode =
+  if (goType.startsWith("*"))
+    let (goItemType = goType.drop(1))
+      optionalType(convertToPklType(goItemType))
+  else if (goType.startsWith("[]"))
+    let (itemType = goType.drop(2))
+      listType(convertToPklType(itemType))
+  else if (goType.startsWith("map["))
+    let (bracketEnd = goType.indexOf("]"))
+      let (keyType = goType.substring("map[".length, bracketEnd))
+        let (valueType = goType.substring(bracketEnd + 1, goType.length))
+          mapType(convertToPklType(keyType), convertToPklType(valueType))
+  else
+    new Mapping {
+      ["bool"] = simpleType("Boolean")
+      ["uint8"] = simpleType("UInt8")
+      ["uint16"] = simpleType("UInt16")
+      ["uint32"] = simpleType("UInt32")
+      ["uint64"] = simpleType("UInt")
+      ["int8"] = simpleType("Int8")
+      ["int16"] = simpleType("Int16")
+      ["int32"] = simpleType("Int32")
+      ["int64"] = simpleType("Int")
+      ["float32"] = simpleType("Float")
+      ["float64"] = simpleType("Float")
+      ["complex64"] = simpleType("Number")
+      ["complex128"] = simpleType("Number")
+      ["byte"] = simpleType("UInt8")
+      ["rune"] = simpleType("Char")
+      ["uint"] = simpleType("UInt")
+      ["int"] = simpleType("Int")
+      ["uintptr"] = simpleType("UInt")
+      ["string"] = simpleType("String")
+      ["time.Duration"] = simpleType("Duration")
+      ["any"] = simpleType("Any")
+    }.getOrNull(goType) ?? simpleType(goType)
+
+
+function optionalType(innerType: TypeNode) = new TypeNode.NullableTypeNode {
+  typeNode = innerType
+}
+function listType(valueGoType: TypeNode) = new TypeNode.DeclaredTypeNode {
+  name = qualifiedIdentifier("Listing")
+  typeArguments {
+    valueGoType
+  }
+}
+function mapType(keyGoType: TypeNode, valueGoType: TypeNode) = new TypeNode.DeclaredTypeNode {
+  name = qualifiedIdentifier("Mapping")
+  typeArguments {
+    keyGoType
+    valueGoType
+  }
+}
+function simpleType(pklTypeName: String) = new TypeNode.DeclaredTypeNode {
+  name = qualifiedIdentifier(pklTypeName)
+}
+function qualifiedIdentifier(identifierValue: String) = new QualifiedIdentifierNode {
+  parts {
+    for (part in identifierValue.split(".")) {
+      identifier(part)
+    }
+  }
+}
+function identifier(identifierValue: String) = new IdentifierNode {
+  value = identifierValue
+}
