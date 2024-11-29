@@ -3,6 +3,8 @@ package analyzer
 import (
 	"encoding/json"
 	"fmt"
+	"golang.org/x/mod/modfile"
+	"maps"
 	"slices"
 )
 import (
@@ -15,19 +17,16 @@ import (
 	"strings"
 )
 
-type Package struct {
-	Files []*File `json:"files"`
-}
-type Import struct {
-	Path  string `json:"path"`
-	Alias string `json:"alias,omitempty"`
-}
 type File struct {
 	Source  string             `json:"source"`
 	Package string             `json:"package"`
 	Imports []*Import          `json:"imports,omitempty"`
 	Aliases map[string]string  `json:"aliases,omitempty"`
 	Structs map[string]*Struct `json:"structs,omitempty"`
+}
+type Import struct {
+	Path  string `json:"path"`
+	Alias string `json:"alias,omitempty"`
 }
 type Struct struct {
 	Extends []string          `json:"extends,omitempty"`
@@ -44,12 +43,12 @@ type Tag struct {
 }
 
 func AnalyzeSourceRoot(sourcePaths []string, destinationPath string) error {
-	analyses := make([]*File, 0)
+	analyses := map[string][]*File{}
 	for _, sourcePath := range sourcePaths {
 		result := doAnalyze(sourcePath)
-		analyses = append(analyses, result...)
+		maps.Insert(analyses, maps.All(result))
 	}
-	content, err := json.Marshal(analyses)
+	content, err := json.MarshalIndent(analyses, "", "  ")
 	if err != nil {
 		return err
 	}
@@ -58,8 +57,9 @@ func AnalyzeSourceRoot(sourcePaths []string, destinationPath string) error {
 
 var skippedDirectoryNames = []string{"vendor"}
 
-func doAnalyze(root string) []*File {
-	analyses := make([]*File, 0)
+func doAnalyze(root string) map[string][]*File {
+	analyses := map[string][]*File{}
+	var currentModulePath = ""
 	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
@@ -72,25 +72,21 @@ func doAnalyze(root string) []*File {
 				if err != nil {
 					return err
 				}
-				rootParent := filepath.Dir(root)
-				relPath, err := filepath.Rel(rootParent, path)
-				if err != nil {
-					return err
-				}
-				fmt.Printf("%s\n", relPath)
+				fmt.Printf("%s\n", path)
 				analysis := analyze(goSourceFile)
 				if analysis != nil {
-					analysis.Source = relPath
-					analyses = append(analyses, analysis)
+					analysis.Source = path
+					analyses[currentModulePath] = append(analyses[currentModulePath], analysis)
 				}
 			}
 		} else {
 			if slices.Contains(skippedDirectoryNames, info.Name()) {
 				return filepath.SkipDir
 			}
-		}
-		if err != nil {
-			panic(err)
+			content, err := os.ReadFile(filepath.Join(path, "go.mod"))
+			if err == nil {
+				currentModulePath = modfile.ModulePath(content)
+			}
 		}
 		return nil
 	})
@@ -107,12 +103,12 @@ func analyze(goFile *ast.File) *File {
 	aliases := map[string]string{}
 	for _, x := range goFile.Imports {
 		imp := &Import{
-			Path: x.Path.Value,
+			Path: strings.Trim(x.Path.Value, "\""),
 		}
 		if x.Name != nil {
 			imp.Alias = x.Name.Name
 		}
-		imports = append(imports)
+		imports = append(imports, imp)
 	}
 	ast.Inspect(goFile, func(n ast.Node) bool {
 		switch typedNode := n.(type) {
