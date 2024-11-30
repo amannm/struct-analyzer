@@ -169,7 +169,10 @@ func analyze(goFile *ast.File) *File {
 			} else {
 				switch x := typedNode.Type.(type) {
 				case *ast.Ident:
-					aliases[typeIdentifier] = renderType(x)
+					renderedType := renderType(x)
+					if renderedType != "" {
+						aliases[typeIdentifier] = renderedType
+					}
 				case *ast.StructType:
 					st := handleStruct(x)
 					if st != nil {

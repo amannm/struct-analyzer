@@ -84,9 +84,11 @@ local function handlePackageType(reverseNesting: String, packageFiles: List<File
     for (packageFile in packageFiles) {
       when (packageFile.aliases != null) {
         for (sourceType, destType in packageFile.aliases!!) {
-          new {
-            name = identifier(sourceType)
-            type = convertToPklType(destType)
+          when (sourceType.chars.first.matches(Regex(#"[A-Z]"#))) {
+            new {
+              name = identifier(sourceType)
+              type = convertToPklType(destType)
+            }
           }
         }
       }
@@ -96,10 +98,10 @@ local function handlePackageType(reverseNesting: String, packageFiles: List<File
     for (packageFile in packageFiles) {
       when (packageFile.structs != null) {
         for (structName, structSpec in packageFile.structs!!) {
-
-          handleStructType(structName, structSpec)
+          when (structName.chars.first.matches(Regex(#"[A-Z]"#))) {
+            handleStructType(structName, structSpec)
+          }
         }
-
       }
     }
   }
@@ -108,41 +110,16 @@ local function handlePackageType(reverseNesting: String, packageFiles: List<File
 local function handleStructType(typeName: String, typeSpec: Struct): ClassNode = new {
   classHeader {
     name = identifier(typeName)
-    //     modifiers {
-    //       "open"
-    //     }
-    //     when (typeSpec.`extends` != null && typeSpec.`extends`.length == 1) {
-    //       extendsClause {
-    //         type = simpleType(typeSpec.`extends`.first)
-    //       }
-    //     }
   }
   properties {
     for (fn, fv in typeSpec.fields) {
-      new {
-        name = identifier(fn)
-        typeAnnotation {
-          type = convertToPklType(fv.goType)
+      when (fn.chars.first.matches(Regex(#"[A-Z]"#))) {
+        new {
+          name = identifier(fn)
+          typeAnnotation {
+            type = convertToPklType(fv.goType)
+          }
         }
-        //         annotations {
-        //           new {
-        //             identifier = qualifiedIdentifier("otel.Metadata")
-        //             body {
-        //               members {
-        //                 for (t in fv.tags) {
-        //                   new ObjectBodyNode.PropertyMemberNode {
-        //                     propertyName = identifier(t.type)
-        //                     assignment = new ExpressionNode.StringExpressionNode {
-        //                       stringParts {
-        //                         (t.argument ?? "") + (t.options?.join(", ")  ?? "")
-        //                       }
-        //                     }
-        //                   }
-        //                 }
-        //               }
-        //             }
-        //           }
-        //         }
       }
     }
   }
