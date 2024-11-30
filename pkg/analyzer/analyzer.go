@@ -168,6 +168,8 @@ func analyze(goFile *ast.File) *File {
 				aliases[typeIdentifier] = renderType(typedNode.Type)
 			} else {
 				switch x := typedNode.Type.(type) {
+				case *ast.Ident:
+					aliases[typeIdentifier] = renderType(x)
 				case *ast.StructType:
 					st := handleStruct(x)
 					if st != nil {
@@ -201,13 +203,14 @@ func handleStruct(st *ast.StructType) *Struct {
 					extensions = append(extensions, typ)
 				} else {
 					tag := field.Tag
+					tagResults := make([]*Tag, 0)
 					if tag != nil {
-						tagResults := parseTags(tag)
-						for _, name := range field.Names {
-							fieldAnalyses[name.Name] = &Field{
-								Tags:   tagResults,
-								GoType: typ,
-							}
+						tagResults = parseTags(tag)
+					}
+					for _, name := range field.Names {
+						fieldAnalyses[name.Name] = &Field{
+							Tags:   tagResults,
+							GoType: typ,
 						}
 					}
 				}

@@ -1,25 +1,25 @@
 import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.deepToTyped@1.0.5#/deepToTyped.pkl"
 import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/ClassNode.pkl"
-import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/ModuleNode.pkl"
 import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/IdentifierNode.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/ModuleNode.pkl"
 import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/QualifiedIdentifierNode.pkl"
 import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/TypeNode.pkl"
 import "pkl:json"
 
 local parsed = new json.Parser { useMapping = true }.parse(read("file:/dev/stdin")) as Listing<Any>
-local typedFiles = parsed.toList().map((it)-> deepToTyped.apply(File, it) as File)
+local typedFiles = parsed.toList().map((it) -> deepToTyped.apply(File, it) as File)
 
 local modules: Map<String, Map<String, List<File>>> = typedFiles.toList()
-  .groupBy((a)->a.`module`)
-  .mapValues((_,v)->v.groupBy((b)->b.location.split("/").dropLast(1).join("/")))
+  .groupBy((a) -> a.`module`)
+  .mapValues((_, v) -> v.groupBy((b) -> b.location.split("/").dropLast(1).join("/")))
 
 local compiledModules: Mapping<String, ModuleNode> = new {
   for (moduleName, moduleFiles in modules) {
     for (packageName, packageFiles in moduleFiles) {
       when (packageName.isEmpty) {
-        ["\(moduleName).pkl"] = handlePackageType("\(moduleName).pkl".split("/").map((_)->"..").dropLast(1).join("/"), packageFiles)
+        ["\(moduleName).pkl"] = handlePackageType("\(moduleName).pkl".split("/").map((_) -> "..").dropLast(1).join("/"), packageFiles)
       } else {
-        ["\(moduleName)/\(packageName).pkl"] = handlePackageType("\(moduleName)/\(packageName).pkl".split("/").map((_)->"..").dropLast(1).join("/"), packageFiles)
+        ["\(moduleName)/\(packageName).pkl"] = handlePackageType("\(moduleName)/\(packageName).pkl".split("/").map((_) -> "..").dropLast(1).join("/"), packageFiles)
       }
     }
   }
@@ -33,7 +33,7 @@ output {
       }
     }
   }
-  renderer = new PcfRenderer{omitNullProperties = true}
+  renderer = new PcfRenderer { omitNullProperties = true }
 }
 
 class File {
@@ -96,8 +96,10 @@ local function handlePackageType(reverseNesting: String, packageFiles: List<File
     for (packageFile in packageFiles) {
       when (packageFile.structs != null) {
         for (structName, structSpec in packageFile.structs!!) {
+
           handleStructType(structName, structSpec)
         }
+
       }
     }
   }
@@ -106,7 +108,14 @@ local function handlePackageType(reverseNesting: String, packageFiles: List<File
 local function handleStructType(typeName: String, typeSpec: Struct): ClassNode = new {
   classHeader {
     name = identifier(typeName)
-
+    //     modifiers {
+    //       "open"
+    //     }
+    //     when (typeSpec.`extends` != null && typeSpec.`extends`.length == 1) {
+    //       extendsClause {
+    //         type = simpleType(typeSpec.`extends`.first)
+    //       }
+    //     }
   }
   properties {
     for (fn, fv in typeSpec.fields) {
@@ -115,6 +124,25 @@ local function handleStructType(typeName: String, typeSpec: Struct): ClassNode =
         typeAnnotation {
           type = convertToPklType(fv.goType)
         }
+        //         annotations {
+        //           new {
+        //             identifier = qualifiedIdentifier("otel.Metadata")
+        //             body {
+        //               members {
+        //                 for (t in fv.tags) {
+        //                   new ObjectBodyNode.PropertyMemberNode {
+        //                     propertyName = identifier(t.type)
+        //                     assignment = new ExpressionNode.StringExpressionNode {
+        //                       stringParts {
+        //                         (t.argument ?? "") + (t.options?.join(", ")  ?? "")
+        //                       }
+        //                     }
+        //                   }
+        //                 }
+        //               }
+        //             }
+        //           }
+        //         }
       }
     }
   }
@@ -153,6 +181,7 @@ local function convertToPklType(goType: String): TypeNode =
       ["int"] = simpleType("Int")
       ["uintptr"] = simpleType("UInt")
       ["string"] = simpleType("String")
+      ["time.Time"] = simpleType("Duration")
       ["time.Duration"] = simpleType("Duration")
       ["any"] = simpleType("Any")
     }.getOrNull(goType) ?? simpleType(goType)
