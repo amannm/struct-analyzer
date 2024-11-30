@@ -3,26 +3,24 @@ package analyzer
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/mod/modfile"
-	"maps"
-	"slices"
-)
-import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"golang.org/x/mod/modfile"
 	"log"
+
 	"os"
 	"path/filepath"
 	"strings"
 )
 
 type File struct {
-	Source  string             `json:"source"`
-	Package string             `json:"package"`
-	Imports []*Import          `json:"imports,omitempty"`
-	Aliases map[string]string  `json:"aliases,omitempty"`
-	Structs map[string]*Struct `json:"structs,omitempty"`
+	Module   string             `json:"module"`
+	Package  string             `json:"package"`
+	Location string             `json:"location"`
+	Imports  []*Import          `json:"imports,omitempty"`
+	Aliases  map[string]string  `json:"aliases,omitempty"`
+	Structs  map[string]*Struct `json:"structs,omitempty"`
 }
 type Import struct {
 	Path  string `json:"path"`
@@ -43,10 +41,11 @@ type Tag struct {
 }
 
 func AnalyzeSourceRoot(sourcePaths []string, destinationPath string) error {
-	analyses := map[string][]*File{}
+	analyses := make([]*File, 0)
 	for _, sourcePath := range sourcePaths {
-		result := doAnalyze(sourcePath)
-		maps.Insert(analyses, maps.All(result))
+		roots := locateModuleRoots(sourcePath)
+		result := doAnalyze(sourcePath, roots)
+		analyses = append(analyses, result...)
 	}
 	content, err := json.MarshalIndent(analyses, "", "  ")
 	if err != nil {
@@ -57,35 +56,64 @@ func AnalyzeSourceRoot(sourcePaths []string, destinationPath string) error {
 
 var skippedDirectoryNames = []string{"vendor"}
 
-func doAnalyze(root string) map[string][]*File {
-	analyses := map[string][]*File{}
-	var currentModulePath = ""
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+func locateModuleRoots(gitRoot string) map[string]string {
+	results := map[string]string{}
+	err := filepath.WalkDir(gitRoot, func(path string, info os.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		if !info.IsDir() {
+			if filepath.Base(path) == "go.mod" {
+				content, err := os.ReadFile(path)
+				if err != nil {
+					return err
+				}
+				modulePath := modfile.ModulePath(content)
+				results[filepath.Dir(path)] = modulePath
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	return results
+}
+
+func resolveModule(path string, modules map[string]string) string {
+	for {
+		dir, _ := filepath.Split(path)
+		dir = strings.TrimSuffix(dir, "/")
+		if dir == "" {
+			return ""
+		}
+		module, ok := modules[dir]
+		if ok {
+			return module
+		}
+		path = dir
+	}
+}
+
+func doAnalyze(gitRoot string, moduleRoots map[string]string) []*File {
+	var analyses []*File
+	err := filepath.WalkDir(gitRoot, func(path string, info os.DirEntry, err error) error {
 		if err != nil {
 			return nil
 		}
 		ext := filepath.Ext(path)
 		if !info.IsDir() {
 			if ext == ".go" && !strings.HasSuffix(path, "_test.go") {
-				fs := token.NewFileSet()
-				goSourceFile, err := parser.ParseFile(fs, path, nil, parser.ParseComments)
-				if err != nil {
-					return err
+				currentModulePath := resolveModule(path, moduleRoots)
+				if currentModulePath != "" {
+					analysis, err := analyzeModule(gitRoot, path, currentModulePath)
+					if err != nil {
+						return err
+					}
+					if analysis != nil {
+						analyses = append(analyses, analysis)
+					}
 				}
-				fmt.Printf("%s\n", path)
-				analysis := analyze(goSourceFile)
-				if analysis != nil {
-					analysis.Source = path
-					analyses[currentModulePath] = append(analyses[currentModulePath], analysis)
-				}
-			}
-		} else {
-			if slices.Contains(skippedDirectoryNames, info.Name()) {
-				return filepath.SkipDir
-			}
-			content, err := os.ReadFile(filepath.Join(path, "go.mod"))
-			if err == nil {
-				currentModulePath = modfile.ModulePath(content)
 			}
 		}
 		return nil
@@ -94,6 +122,27 @@ func doAnalyze(root string) map[string][]*File {
 		log.Fatal(err)
 	}
 	return analyses
+}
+
+func analyzeModule(gitRoot string, path string, currentModulePath string) (*File, error) {
+	fs := token.NewFileSet()
+	goSourceFile, err := parser.ParseFile(fs, path, nil, parser.ParseComments)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("%s\n", path)
+	analysis := analyze(goSourceFile)
+	if analysis != nil {
+		relPath, err := filepath.Rel(gitRoot, path)
+		if err != nil {
+			return nil, err
+		}
+		relPath = alignPaths(currentModulePath, relPath)
+		analysis.Location = relPath
+		analysis.Module = currentModulePath
+		return analysis, nil
+	}
+	return nil, nil
 }
 
 func analyze(goFile *ast.File) *File {
@@ -243,4 +292,16 @@ func renderType(typeExpression ast.Expr) string {
 	default:
 		panic(n)
 	}
+}
+
+func alignPaths(base string, other string) string {
+	otherParts := strings.Split(other, "/")
+	suffix := ""
+	for i := 0; i < len(otherParts); i++ {
+		suffix += "/" + otherParts[i]
+		if strings.HasSuffix(base, suffix) {
+			return strings.TrimPrefix(other, suffix[1:])[1:]
+		}
+	}
+	return other
 }

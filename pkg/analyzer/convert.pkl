@@ -6,28 +6,20 @@ import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/Qua
 import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/TypeNode.pkl"
 import "pkl:json"
 
-local parsed = new json.Parser { useMapping = true }.parse(read("file:/dev/stdin")) as Mapping<String, Any>
-local modules: Mapping<String, Map<String, List<File>>> = new {
-  for (k, v in parsed) {
-    [k] = (v as Listing<Any>)
-      .toList()
-      .map((it)-> deepToTyped.apply(File, it) as File)
-      .groupBy((it)->it.package)
-  }
-}
+local parsed = new json.Parser { useMapping = true }.parse(read("file:/dev/stdin")) as Listing<Any>
+local typedFiles = parsed.toList().map((it)-> deepToTyped.apply(File, it) as File)
+
+local modules: Map<String, Map<String, List<File>>> = typedFiles.toList()
+  .groupBy((a)->a.`module`)
+  .mapValues((_,v)->v.groupBy((b)->b.location.split("/").dropLast(1).join("/")))
+
 local compiledModules: Mapping<String, ModuleNode> = new {
   for (moduleName, moduleFiles in modules) {
     for (packageName, packageFiles in moduleFiles) {
-      ["\(moduleName)/\(packageName).pkl"] = new ModuleNode {
-        classes {
-          for (_, packageFile in packageFiles) {
-            when (packageFile.structs != null) {
-              for (structName, structSpec in packageFile.structs!!) {
-                handleStructType(structName, structSpec)
-              }
-            }
-          }
-        }
+      when (packageName.isEmpty) {
+        ["\(moduleName).pkl"] = handlePackageType("\(moduleName).pkl".split("/").map((_)->"..").dropLast(1).join("/"), packageFiles)
+      } else {
+        ["\(moduleName)/\(packageName).pkl"] = handlePackageType("\(moduleName)/\(packageName).pkl".split("/").map((_)->"..").dropLast(1).join("/"), packageFiles)
       }
     }
   }
@@ -45,7 +37,8 @@ output {
 }
 
 class File {
-  source: String
+  `module`: String
+  location: String
   package: String
   imports: Listing<Import>?
   aliases: Mapping<String, String>?
@@ -73,9 +66,47 @@ class Tag {
   options: Listing<String>?
 }
 
+
+local function handlePackageType(reverseNesting: String, packageFiles: List<File>) = new ModuleNode {
+  imports {
+    for (packageFile in packageFiles) {
+      when (packageFile.imports != null) {
+        for (importLine in packageFile.imports!!) {
+          new {
+            value = reverseNesting + "/" + importLine.path + ".pkl"
+            alias = importLine.alias
+          }
+        }
+      }
+    }
+  }
+  typealiases {
+    for (packageFile in packageFiles) {
+      when (packageFile.aliases != null) {
+        for (sourceType, destType in packageFile.aliases!!) {
+          new {
+            name = identifier(sourceType)
+            type = convertToPklType(destType)
+          }
+        }
+      }
+    }
+  }
+  classes {
+    for (packageFile in packageFiles) {
+      when (packageFile.structs != null) {
+        for (structName, structSpec in packageFile.structs!!) {
+          handleStructType(structName, structSpec)
+        }
+      }
+    }
+  }
+}
+
 local function handleStructType(typeName: String, typeSpec: Struct): ClassNode = new {
   classHeader {
     name = identifier(typeName)
+
   }
   properties {
     for (fn, fv in typeSpec.fields) {
