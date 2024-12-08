@@ -15,24 +15,29 @@ import (
 )
 
 type File struct {
-	Module   string             `json:"module"`
-	Package  string             `json:"package"`
-	Location string             `json:"location"`
-	Imports  []*Import          `json:"imports,omitempty"`
-	Aliases  map[string]string  `json:"aliases,omitempty"`
-	Structs  map[string]*Struct `json:"structs,omitempty"`
+	Module        string             `json:"module"`
+	Package       string             `json:"package"`
+	Location      string             `json:"location"`
+	Imports       []*Import          `json:"imports,omitempty"`
+	Aliases       map[string]string  `json:"aliases,omitempty"`
+	Structs       map[string]*Struct `json:"structs,omitempty"`
+	Documentation string             `json:"documentation,omitempty"`
 }
 type Import struct {
 	Path  string `json:"path"`
 	Alias string `json:"alias,omitempty"`
 }
 type Struct struct {
-	Extends []string          `json:"extends,omitempty"`
-	Fields  map[string]*Field `json:"fields"`
+	Embeds        []string          `json:"embeds,omitempty"`
+	Fields        map[string]*Field `json:"fields"`
+	Documentation string            `json:"documentation,omitempty"`
+	Comments      string            `json:"comments,omitempty"`
 }
 type Field struct {
-	GoType string `json:"goType"`
-	Tags   []*Tag `json:"tags"`
+	GoType        string `json:"goType"`
+	Tags          []*Tag `json:"tags"`
+	Documentation string `json:"documentation,omitempty"`
+	Comments      string `json:"comments,omitempty"`
 }
 type Tag struct {
 	Type     string   `json:"type"`
@@ -150,6 +155,7 @@ func analyze(goFile *ast.File) *File {
 	imports := make([]*Import, 0)
 	structs := map[string]*Struct{}
 	aliases := map[string]string{}
+	fileDoc := strings.TrimSuffix(goFile.Doc.Text(), "\n")
 	for _, x := range goFile.Imports {
 		imp := &Import{
 			Path: strings.Trim(x.Path.Value, "\""),
@@ -162,13 +168,15 @@ func analyze(goFile *ast.File) *File {
 	ast.Inspect(goFile, func(n ast.Node) bool {
 		switch typedNode := n.(type) {
 		case *ast.TypeSpec:
+			doc := strings.TrimSuffix(typedNode.Doc.Text(), "\n")
+			comm := strings.TrimSuffix(typedNode.Comment.Text(), "\n")
 			typeIdentifier := typedNode.Name.Name
 			//varParams := typeExpr.TypeParams
 			if typedNode.Assign.IsValid() {
 				aliases[typeIdentifier] = renderType(typedNode.Type)
 			} else {
 				switch x := typedNode.Type.(type) {
-				case *ast.Ident:
+				default:
 					renderedType := renderType(x)
 					if renderedType != "" {
 						aliases[typeIdentifier] = renderedType
@@ -176,6 +184,8 @@ func analyze(goFile *ast.File) *File {
 				case *ast.StructType:
 					st := handleStruct(x)
 					if st != nil {
+						st.Documentation = doc
+						st.Comments = comm
 						structs[typeIdentifier] = st
 					}
 				}
@@ -187,23 +197,24 @@ func analyze(goFile *ast.File) *File {
 		return nil
 	}
 	return &File{
-		Package: packageName,
-		Imports: imports,
-		Aliases: aliases,
-		Structs: structs,
+		Package:       packageName,
+		Imports:       imports,
+		Aliases:       aliases,
+		Structs:       structs,
+		Documentation: fileDoc,
 	}
 }
 
 func handleStruct(st *ast.StructType) *Struct {
 	fieldAnalyses := map[string]*Field{}
-	extensions := make([]string, 0)
+	embeds := make([]string, 0)
 	fields := st.Fields
 	if fields != nil {
 		for _, field := range fields.List {
 			typ := renderType(field.Type)
 			if typ != "" {
 				if len(field.Names) == 0 {
-					extensions = append(extensions, typ)
+					embeds = append(embeds, typ)
 				} else {
 					tag := field.Tag
 					tagResults := make([]*Tag, 0)
@@ -211,21 +222,25 @@ func handleStruct(st *ast.StructType) *Struct {
 						tagResults = parseTags(tag)
 					}
 					for _, name := range field.Names {
+						doc := field.Doc.Text()
+						comment := field.Comment.Text()
 						fieldAnalyses[name.Name] = &Field{
-							Tags:   tagResults,
-							GoType: typ,
+							Tags:          tagResults,
+							GoType:        typ,
+							Documentation: strings.TrimSuffix(doc, "\n"),
+							Comments:      strings.TrimSuffix(comment, "\n"),
 						}
 					}
 				}
 			}
 		}
 	}
-	if len(fieldAnalyses) == 0 && len(extensions) == 0 {
+	if len(fieldAnalyses) == 0 && len(embeds) == 0 {
 		return nil
 	}
 	return &Struct{
-		Fields:  fieldAnalyses,
-		Extends: extensions,
+		Fields: fieldAnalyses,
+		Embeds: embeds,
 	}
 }
 
@@ -293,8 +308,24 @@ func renderType(typeExpression ast.Expr) string {
 		return ""
 	case *ast.ChanType:
 		return ""
-	case *ast.FuncType:
+	case *ast.Ellipsis:
 		return ""
+	case *ast.FuncType:
+		innerTypes := make([]string, 0)
+		params := n.Params
+		if params != nil {
+			for _, ft := range params.List {
+				innerTypes = append(innerTypes, renderType(ft.Type))
+			}
+		}
+		returnTypes := make([]string, 0)
+		results := n.Results
+		if results != nil {
+			for _, ft := range results.List {
+				returnTypes = append(returnTypes, renderType(ft.Type))
+			}
+		}
+		return "func(" + strings.Join(innerTypes, ", ") + ") (" + strings.Join(returnTypes, ", ") + ")"
 	default:
 		panic(n)
 	}

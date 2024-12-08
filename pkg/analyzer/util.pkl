@@ -1,0 +1,287 @@
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.deepToTyped@1.0.5#/deepToTyped.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/IdentifierNode.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/QualifiedIdentifierNode.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/ClassOrModuleNode.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/TypeNode.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/ModuleNode.pkl"
+import "pkl:json"
+
+local parsed = new json.Parser { useMapping = true }.parse(read("file:/dev/stdin")) as Listing<Any>
+hidden typedFiles: List<File> = parsed.toList().map((it) -> deepToTyped.apply(File, it) as File)
+
+
+
+
+
+
+local function isExported(sourceType: String): Boolean = sourceType.chars.first.matches(Regex(#"[A-Z]"#))
+
+
+local modules: Map<String, Map<String, List<File>>> = typedFiles.toList()
+  .groupBy((a) -> a.`module`)
+  .mapValues((_, v) -> v.groupBy((b) -> b.location.split("/").dropLast(1).join("/")))
+
+local compiledModules: Mapping<String, ModuleNode> = new {
+  for (moduleName, moduleFiles in modules) {
+    for (packageName, packageFiles in moduleFiles) {
+      when (packageName.isEmpty) {
+        ["\(moduleName).pkl"] = handlePackageType("\(moduleName).pkl".split("/").map((_) -> "..").dropLast(1).join("/"), packageFiles)
+      } else {
+        ["\(moduleName)/\(packageName).pkl"] = handlePackageType("\(moduleName)/\(packageName).pkl".split("/").map((_) -> "..").dropLast(1).join("/"), packageFiles)
+      }
+    }
+  }
+}
+
+output {
+  files {
+    for (moduleFile, moduleBody in compiledModules) {
+      [moduleFile] = new FileOutput {
+        text = moduleBody.output.text
+      }
+    }
+  }
+  renderer = new PcfRenderer { omitNullProperties = true }
+}
+
+
+
+
+
+local function handlePackageType(reverseNesting: String, packageFiles: List<File>) = new ModuleNode {
+  imports {
+    for (packageFile in packageFiles) {
+      when (packageFile.imports != null) {
+        for (importLine in packageFile.imports!!) {
+          new {
+            value = reverseNesting + "/" + importLine.path + ".pkl"
+            alias = importLine.alias
+          }
+        }
+      }
+    }
+  }
+  typealiases {
+    for (packageFile in packageFiles) {
+      when (packageFile.aliases != null) {
+        for (sourceType, destType in packageFile.aliases!!) {
+          when (isExported(sourceType)) {
+            new {
+              name = identifier(sourceType)
+              type = convertToPklType(destType)
+            }
+          }
+        }
+      }
+    }
+  }
+  classes {
+    for (packageFile in packageFiles) {
+      when (packageFile.structs != null) {
+        for (structName, structSpec in packageFile.structs!!) {
+          when (isExported(structName)) {
+            new {
+              classHeader {
+                name = identifier(structName)
+              }
+              when (structSpec.documentation != null) {
+                docComment {
+                  value = structSpec.documentation!!
+                }
+              }
+              when (structSpec.comment != null) {
+                docComment {
+                  value = structSpec.comment!!
+                }
+              }
+              properties {
+                ...convertFieldSet(collectFields(packageFile, structSpec))
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+local function convertFieldSet(m: List<Pair<String, Field>>): Listing<ClassOrModuleNode.PropertyDefinitionNode> = new {
+  for (p in m) {
+    new {
+      name = identifier(p.first)
+      typeAnnotation {
+        type = convertToPklType(p.second.goType)
+      }
+      when (p.second.documentation != null) {
+        docComment {
+          value = p.second.documentation!!
+        }
+      }
+      when (p.second.comment != null) {
+        docComment {
+          value = p.second.comment!!
+        }
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+class File {
+  `module`: String
+  location: String
+  package: String
+  imports: Listing<Import>?
+  aliases: Mapping<String, String>?
+  structs: Mapping<String, Struct>?
+  documentation: String?
+}
+class Import {
+  path: String
+  alias: String?
+}
+class Struct {
+  embeds: Listing<String>?
+  fields: Mapping<String, Field>
+  documentation: String?
+  comment: String?
+}
+class Field {
+  goType: String
+  tags: Listing<Tag>
+  documentation: String?
+  comment: String?
+}
+class Tag {
+  type: String
+  argument: String?
+  options: Listing<String>?
+}
+local function packagePath(f: File) = (f.`module` + "/" + f.location.split("/").dropLast(1).join("/")).replaceFirst(Regex(#"/$"#), "")
+function collectFields(context: File, structSpec: Struct): List<Pair<String, Field>> =
+  (structSpec.embeds
+    ?.toList()
+    ?.map((it) -> resolveCanonicalTypeName(context, it))
+    ?.map((it) -> declaredTypeSpecs.getOrNull(it))
+    ?.flatMap((it) ->
+    if (it?.second is Struct) collectFields(it.first, it.second)
+    else List()) ?? List())
+  +
+    structSpec.fields.toMap().entries
+local function extractTypesFromFile(file: File): Mapping<CanonicalTypeName, Pair<File, Struct|String>> = new {
+  for (typeName, typeSpec in file.structs ?? new Mapping {}) {
+    ["\(packagePath(file))#\(typeName)"] = Pair(file, typeSpec)
+  }
+  for (typeName, typeRef in file.aliases ?? new Mapping {}) {
+    ["\(packagePath(file))#\(typeName)"] = Pair(file, typeRef)
+  }
+}
+local declaredTypeSpecs: Mapping<CanonicalTypeName, Pair<File, Struct|String>> = typedFiles.flatMap((f) -> extractTypesFromFile(f).toMap().entries).toMap((it) -> it.first, (it) -> it.second).toMapping()
+typealias CanonicalTypeName = String
+// get the type spec for a type name
+local function resolveCanonicalTypeName(context: File, rawTypeName: String): CanonicalTypeName =
+  let (unconstrainedTypeName = rawTypeName.splitLimit("[", 2)[0])
+    let (parts = unconstrainedTypeName.splitLimit(".", 2))
+      if (parts.length == 1)
+        let (typeName = parts[0].splitLimit("[", 2)[0])
+          "\(packagePath(context))#\(typeName)"
+      else if (parts.length == 2)
+        let (typePackageName = parts[0].replaceAll(Regex(#"^\*+"#), ""))
+          let (sourcePackagePath = context.imports.toList()
+            .toMap((it) -> it.alias ?? it.path.split("/").last, (it) -> it.path) // not accurate
+            .getOrNull(typePackageName))
+            if (sourcePackagePath != null)
+              let (typeName = parts[1].splitLimit("[", 2)[0])
+                "\(sourcePackagePath)#\(typeName)"
+            else
+              throw("invalid package reference: \(typePackageName)")
+      else
+        throw("unsupported type: \(unconstrainedTypeName)")
+
+function convertToPklType(typeName: String): TypeNode =
+  if (typeName.startsWith("*"))
+    let (goItemType = typeName.drop(1))
+      optionalType(convertToPklType(goItemType))
+  else if (typeName.startsWith("[]"))
+    let (itemType = typeName.drop(2))
+      listType(convertToPklType(itemType))
+  else if (typeName.startsWith("map["))
+    let (bracketEnd = typeName.indexOf("]"))
+      let (keyType = typeName.substring("map[".length, bracketEnd))
+        let (valueType = typeName.substring(bracketEnd + 1, typeName.length))
+          mapType(convertToPklType(keyType), convertToPklType(valueType))
+  else if (typeName.matches(Regex(#"^[a-zA-Z_][a-zA-Z_0-9]*(\.[a-zA-Z_][a-zA-Z_0-9]*)?\["#)))
+    let (bracketStart = typeName.indexOf("["))
+      let (baseType = typeName.substring(0, bracketStart))
+        let (bracketEnd = typeName.indexOf("]"))
+          let (typeParams = typeName.substring(bracketStart + 1, bracketEnd).split(",").map((tp) -> tp.trim()).map((it) -> convertToPklType(it)))
+            genericType(qualifiedIdentifier(baseType), typeParams)
+  else
+    baseTypes.getOrNull(typeName)
+    ?? simpleType(typeName)
+local baseTypes = new Mapping {
+  ["bool"] = simpleType("Boolean")
+  ["uint"] = simpleType("UInt")
+  ["uintptr"] = simpleType("UInt")
+  ["uint8"] = simpleType("UInt8")
+  ["uint16"] = simpleType("UInt16")
+  ["uint32"] = simpleType("UInt32")
+  ["uint64"] = simpleType("UInt")
+  ["int"] = simpleType("Int")
+  ["int8"] = simpleType("Int8")
+  ["int16"] = simpleType("Int16")
+  ["int32"] = simpleType("Int32")
+  ["int64"] = simpleType("Int")
+  ["float32"] = simpleType("Float")
+  ["float64"] = simpleType("Float")
+  ["complex64"] = simpleType("Number")
+  ["complex128"] = simpleType("Number")
+  ["byte"] = simpleType("UInt8")
+  ["rune"] = simpleType("Char")
+  ["string"] = simpleType("String")
+  ["time.Time"] = simpleType("String")
+  ["time.Duration"] = simpleType("Duration")
+  ["struct{}"] = simpleType("Any")
+  ["any"] = simpleType("Any")
+}
+function optionalType(innerType: TypeNode) = new TypeNode.NullableTypeNode {
+  typeNode = innerType
+}
+function listType(valueGoType: TypeNode) = new TypeNode.DeclaredTypeNode {
+  name = qualifiedIdentifier("Listing")
+  typeArguments {
+    valueGoType
+  }
+}
+function genericType(identifier: QualifiedIdentifierNode, params: List<TypeNode>) = new TypeNode.DeclaredTypeNode {
+  name = identifier
+  typeArguments = params.toListing()
+}
+function mapType(keyGoType: TypeNode, valueGoType: TypeNode) = new TypeNode.DeclaredTypeNode {
+  name = qualifiedIdentifier("Mapping")
+  typeArguments {
+    keyGoType
+    valueGoType
+  }
+}
+function simpleType(pklTypeName: String) = new TypeNode.DeclaredTypeNode {
+  name = qualifiedIdentifier(pklTypeName)
+}
+function qualifiedIdentifier(identifierValue: String) = new QualifiedIdentifierNode {
+  parts {
+    for (part in identifierValue.split(".")) {
+      identifier(part)
+    }
+  }
+}
+function identifier(identifierValue: String) = new IdentifierNode {
+  value = identifierValue
+}
