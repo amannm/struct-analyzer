@@ -1,21 +1,14 @@
 import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.deepToTyped@1.0.5#/deepToTyped.pkl"
 import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/IdentifierNode.pkl"
-import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/QualifiedIdentifierNode.pkl"
-import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/ClassOrModuleNode.pkl"
-import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/TypeNode.pkl"
 import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/ModuleNode.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/QualifiedIdentifierNode.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.syntax@1.0.3#/TypeNode.pkl"
 import "pkl:json"
 
 local parsed = new json.Parser { useMapping = true }.parse(read("file:/dev/stdin")) as Listing<Any>
 hidden typedFiles: List<File> = parsed.toList().map((it) -> deepToTyped.apply(File, it) as File)
 
-
-
-
-
-
 local function isExported(sourceType: String): Boolean = sourceType.chars.first.matches(Regex(#"[A-Z]"#))
-
 
 local modules: Map<String, Map<String, List<File>>> = typedFiles.toList()
   .groupBy((a) -> a.`module`)
@@ -44,10 +37,6 @@ output {
   renderer = new PcfRenderer { omitNullProperties = true }
 }
 
-
-
-
-
 local function handlePackageType(reverseNesting: String, packageFiles: List<File>) = new ModuleNode {
   imports {
     for (packageFile in packageFiles) {
@@ -65,11 +54,9 @@ local function handlePackageType(reverseNesting: String, packageFiles: List<File
     for (packageFile in packageFiles) {
       when (packageFile.aliases != null) {
         for (sourceType, destType in packageFile.aliases!!) {
-          when (isExported(sourceType)) {
-            new {
-              name = identifier(sourceType)
-              type = convertToPklType(destType)
-            }
+          new {
+            name = identifier(sourceType)
+            type = convertToPklType(destType)
           }
         }
       }
@@ -79,23 +66,40 @@ local function handlePackageType(reverseNesting: String, packageFiles: List<File
     for (packageFile in packageFiles) {
       when (packageFile.structs != null) {
         for (structName, structSpec in packageFile.structs!!) {
-          when (isExported(structName)) {
-            new {
-              classHeader {
-                name = identifier(structName)
+          new {
+            classHeader {
+              name = identifier(structName)
+            }
+            when (structSpec.documentation != null) {
+              docComment {
+                value = structSpec.documentation!!
               }
-              when (structSpec.documentation != null) {
-                docComment {
-                  value = structSpec.documentation!!
+            }
+            when (structSpec.comment != null) {
+              docComment {
+                value = structSpec.comment!!
+              }
+            }
+            properties {
+              for (p in collectFields(packageFile, structSpec)) {
+                when (isExported(p.first)) {
+                  new {
+                    name = identifier(p.first)
+                    typeAnnotation {
+                      type = convertToPklType(p.second.goType)
+                    }
+                    when (p.second.documentation != null) {
+                      docComment {
+                        value = p.second.documentation!!
+                      }
+                    }
+                    when (p.second.comment != null) {
+                      docComment {
+                        value = p.second.comment!!
+                      }
+                    }
+                  }
                 }
-              }
-              when (structSpec.comment != null) {
-                docComment {
-                  value = structSpec.comment!!
-                }
-              }
-              properties {
-                ...convertFieldSet(collectFields(packageFile, structSpec))
               }
             }
           }
@@ -104,36 +108,6 @@ local function handlePackageType(reverseNesting: String, packageFiles: List<File
     }
   }
 }
-
-local function convertFieldSet(m: List<Pair<String, Field>>): Listing<ClassOrModuleNode.PropertyDefinitionNode> = new {
-  for (p in m) {
-    new {
-      name = identifier(p.first)
-      typeAnnotation {
-        type = convertToPklType(p.second.goType)
-      }
-      when (p.second.documentation != null) {
-        docComment {
-          value = p.second.documentation!!
-        }
-      }
-      when (p.second.comment != null) {
-        docComment {
-          value = p.second.comment!!
-        }
-      }
-    }
-  }
-}
-
-
-
-
-
-
-
-
-
 
 class File {
   `module`: String
@@ -159,23 +133,29 @@ class Field {
   tags: Listing<Tag>
   documentation: String?
   comment: String?
+  canonicalType: CanonicalTypeName?
 }
 class Tag {
   type: String
   argument: String?
   options: Listing<String>?
 }
+
+// need to collect the fields, as well as their qualified type
 local function packagePath(f: File) = (f.`module` + "/" + f.location.split("/").dropLast(1).join("/")).replaceFirst(Regex(#"/$"#), "")
+
+
 function collectFields(context: File, structSpec: Struct): List<Pair<String, Field>> =
   (structSpec.embeds
     ?.toList()
-    ?.map((it) -> resolveCanonicalTypeName(context, it))
-    ?.map((it) -> declaredTypeSpecs.getOrNull(it))
     ?.flatMap((it) ->
-    if (it?.second is Struct) collectFields(it.first, it.second)
-    else List()) ?? List())
-  +
-    structSpec.fields.toMap().entries
+    let (ctn = resolveCanonicalTypeName(context, it))
+      let (ts = declaredTypeSpecs.getOrNull(ctn))
+        if (ts?.second is Struct) collectFields(ts.first, ts.second)
+        else List()) ?? List())
+  + structSpec.fields.toMap().entries
+      .map((e) -> Pair(e.first, (e.second) { canonicalType = resolveCanonicalTypeName(context, e.second.goType) }))
+
 local function extractTypesFromFile(file: File): Mapping<CanonicalTypeName, Pair<File, Struct|String>> = new {
   for (typeName, typeSpec in file.structs ?? new Mapping {}) {
     ["\(packagePath(file))#\(typeName)"] = Pair(file, typeSpec)
@@ -250,6 +230,8 @@ local baseTypes = new Mapping {
   ["time.Time"] = simpleType("String")
   ["time.Duration"] = simpleType("Duration")
   ["struct{}"] = simpleType("Any")
+  ["net.Addr"] = simpleType("String")
+  ["rate.Limit"] = simpleType("Float")
   ["any"] = simpleType("Any")
 }
 function optionalType(innerType: TypeNode) = new TypeNode.NullableTypeNode {
