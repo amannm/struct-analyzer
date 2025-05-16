@@ -59,8 +59,6 @@ func AnalyzeSourceRoot(sourcePaths []string, destinationPath string) error {
 	return os.WriteFile(destinationPath, content, 0644)
 }
 
-var skippedDirectoryNames = []string{"vendor"}
-
 func locateModuleRoots(gitRoot string) map[string]string {
 	results := map[string]string{}
 	err := filepath.WalkDir(gitRoot, func(path string, info os.DirEntry, err error) error {

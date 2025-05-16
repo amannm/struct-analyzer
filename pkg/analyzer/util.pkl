@@ -84,7 +84,7 @@ local function handlePackageType(reverseNesting: String, packageFiles: List<File
               for (p in collectFields(packageFile, structSpec)) {
                 when (isExported(p.first)) {
                   new {
-                    name = identifier(p.first)
+                    name = identifier(resolveFieldName(p.second) ?? throw("unresolvable field name from tags: " + p.second.tags.toList().join("|")))
                     typeAnnotation {
                       type = convertToPklType(p.second.goType)
                     }
@@ -144,6 +144,7 @@ class Tag {
 // need to collect the fields, as well as their qualified type
 local function packagePath(f: File) = (f.`module` + "/" + f.location.split("/").dropLast(1).join("/")).replaceFirst(Regex(#"/$"#), "")
 
+function resolveFieldName(f: Field): String? = f.tags.toList().find((tag) -> tag.type == "json")?.argument
 
 function collectFields(context: File, structSpec: Struct): List<Pair<String, Field>> =
   (structSpec.embeds
@@ -231,6 +232,7 @@ local baseTypes = new Mapping {
   ["time.Duration"] = simpleType("Duration")
   ["struct{}"] = simpleType("Any")
   ["net.Addr"] = simpleType("String")
+  ["os.FileMode"] = simpleType("UInt32")
   ["rate.Limit"] = simpleType("Float")
   ["any"] = simpleType("Any")
 }
