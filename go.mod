@@ -1,7 +1,5 @@
-module struct-analyser
+module struct-analyzer
 
-go 1.23
+go 1.24.3
 
-toolchain go1.23.3
-
-require golang.org/x/mod v0.22.0
+require golang.org/x/mod v0.24.0
