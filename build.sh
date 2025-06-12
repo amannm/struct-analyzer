@@ -4,6 +4,7 @@ set -eu
 EXEC_NAME="structanalyzer"
 BUILD_DIR="build"
 
+go mod tidy
 go mod vendor
 go fmt ./...
 go test ./...

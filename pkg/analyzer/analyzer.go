@@ -119,14 +119,15 @@ func doAnalyze(gitRoot string, moduleRoots map[string]string) []*File {
 		if !info.IsDir() {
 			if ext == ".go" && !strings.HasSuffix(path, "_test.go") {
 				currentModulePath := resolveModule(path, moduleRoots)
-				if currentModulePath != "" {
-					analysis, err := analyzeModule(gitRoot, path, currentModulePath)
-					if err != nil {
-						return err
-					}
-					if analysis != nil {
-						analyses = append(analyses, analysis)
-					}
+				if currentModulePath == "" {
+					currentModulePath = filepath.Base(filepath.Dir(path))
+				}
+				analysis, err := analyzeModule(gitRoot, path, currentModulePath)
+				if err != nil {
+					return err
+				}
+				if analysis != nil {
+					analyses = append(analyses, analysis)
 				}
 			}
 		}

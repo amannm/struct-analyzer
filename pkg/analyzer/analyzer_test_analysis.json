@@ -2,7 +2,7 @@
   {
     "module": "specs-go",
     "package": "specs",
-    "location": "config.go",
+    "location": "specs-go/config.go",
     "imports": [
       {
         "path": "os"
@@ -3308,9 +3308,9 @@
     }
   },
   {
-    "module": "specs-go",
+    "module": "features",
     "package": "features",
-    "location": "features/features.go",
+    "location": "specs-go/features/features.go",
     "structs": {
       "Apparmor": {
         "fields": {
@@ -3780,7 +3780,7 @@
   {
     "module": "specs-go",
     "package": "specs",
-    "location": "state.go",
+    "location": "specs-go/state.go",
     "aliases": {
       "ContainerState": "string"
     },
