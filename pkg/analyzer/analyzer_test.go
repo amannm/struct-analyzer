@@ -1,21 +1,16 @@
 package analyzer
 
 import (
+	"path/filepath"
 	"testing"
 )
 
 func TestBasic(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
-		err := AnalyzeSourceRoot([]string{
-			//"/Users/amannmalik/GolandProjects/opentelemetry-collector",
-			//"/Users/amannmalik/GolandProjects/opentelemetry-collector-contrib",
-			//"/Users/amannmalik/GolandProjects/blackfriday",
-			//"/Users/amannmalik/GolandProjects/runc",
-			//"/Users/amannmalik/GolandProjects/cgroups",
-			//"/Users/amannmalik/GolandProjects/sys",
-			//"/Users/amannmalik/GolandProjects/go-systemd",
-			"/Users/amannmalik/GolandProjects/runtime-spec/specs-go",
-		}, "analysis.json")
+		dest := filepath.Join(t.TempDir(), "analysis.json")
+		err := AnalyzeRemoteRepos([]string{
+			"https://github.com/opencontainers/runtime-spec",
+		}, dest)
 		if err != nil {
 			t.Fatal(err)
 		}

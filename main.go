@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	err := analyzer.AnalyzeSourceRoot([]string{
+	err := analyzer.AnalyzeRemoteRepos([]string{
 		//"/Users/amannmalik/GolandProjects/opentelemetry-collector",
 		//"/Users/amannmalik/GolandProjects/opentelemetry-collector-contrib",
 		//"/Users/amannmalik/GolandProjects/blackfriday",
