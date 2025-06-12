@@ -49,8 +49,18 @@ type Tag struct {
 func AnalyzeRepositories(sourcePaths []string, destinationPath string) error {
 	analyses := make([]*File, 0)
 	for _, sourcePath := range sourcePaths {
-		roots := locateModuleRoots(sourcePath)
-		result := doAnalyze(sourcePath, roots)
+		localPath := sourcePath
+		cleanup := func() {}
+		if isRemote(sourcePath) {
+			var err error
+			localPath, cleanup, err = cloneRepository(sourcePath)
+			if err != nil {
+				return err
+			}
+			defer cleanup()
+		}
+		roots := locateModuleRoots(localPath)
+		result := doAnalyze(localPath, roots)
 		analyses = append(analyses, result...)
 	}
 	content, err := json.MarshalIndent(analyses, "", "  ")
