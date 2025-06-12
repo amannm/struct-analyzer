@@ -1,0 +1,3917 @@
+[
+  {
+    "module": "specs-go",
+    "package": "specs",
+    "location": "config.go",
+    "imports": [
+      {
+        "path": "os"
+      }
+    ],
+    "aliases": {
+      "Arch": "string",
+      "IOPriorityClass": "string",
+      "LinuxNamespaceType": "string",
+      "LinuxPersonalityDomain": "string",
+      "LinuxPersonalityFlag": "string",
+      "LinuxSchedulerFlag": "string",
+      "LinuxSchedulerPolicy": "string",
+      "LinuxSeccompAction": "string",
+      "LinuxSeccompFlag": "string",
+      "LinuxSeccompOperator": "string",
+      "ZOSNamespaceType": "string"
+    },
+    "structs": {
+      "Box": {
+        "fields": {
+          "Height": {
+            "goType": "uint",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "height"
+              }
+            ],
+            "documentation": "Height is the vertical dimension of a box."
+          },
+          "Width": {
+            "goType": "uint",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "width"
+              }
+            ],
+            "documentation": "Width is the horizontal dimension of a box."
+          }
+        }
+      },
+      "CPUAffinity": {
+        "fields": {
+          "Final": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "final",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "Initial": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "initial",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "Hook": {
+        "fields": {
+          "Args": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "args",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "Env": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "env",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "Path": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "path"
+              }
+            ]
+          },
+          "Timeout": {
+            "goType": "*int",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "timeout",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "Hooks": {
+        "fields": {
+          "CreateContainer": {
+            "goType": "[]Hook",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "createContainer",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "CreateContainer is a list of hooks to be run after the container has been created but before pivot_root or any equivalent operation has been called\nIt is called in the Container Namespace"
+          },
+          "CreateRuntime": {
+            "goType": "[]Hook",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "createRuntime",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "CreateRuntime is a list of hooks to be run after the container has been created but before pivot_root or any equivalent operation has been called\nIt is called in the Runtime Namespace"
+          },
+          "Poststart": {
+            "goType": "[]Hook",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "poststart",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Poststart is a list of hooks to be run after the container process is started.\nIt is called in the Runtime Namespace"
+          },
+          "Poststop": {
+            "goType": "[]Hook",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "poststop",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Poststop is a list of hooks to be run after the container process exits.\nIt is called in the Runtime Namespace"
+          },
+          "Prestart": {
+            "goType": "[]Hook",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "prestart",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Prestart is Deprecated. Prestart is a list of hooks to be run before the container process is executed.\nIt is called in the Runtime Namespace\n\nDeprecated: use [Hooks.CreateRuntime], [Hooks.CreateContainer], and\n[Hooks.StartContainer] instead, which allow more granular hook control\nduring the create and start phase."
+          },
+          "StartContainer": {
+            "goType": "[]Hook",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "startContainer",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "StartContainer is a list of hooks to be run after the start operation is called but before the container process is started\nIt is called in the Container Namespace"
+          }
+        }
+      },
+      "Linux": {
+        "fields": {
+          "CgroupsPath": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "cgroupsPath",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "CgroupsPath specifies the path to cgroups that are created and/or joined by the container.\nThe path is expected to be relative to the cgroups mountpoint.\nIf resources are specified, the cgroups at CgroupsPath will be updated based on resources."
+          },
+          "Devices": {
+            "goType": "[]LinuxDevice",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "devices",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Devices are a list of device nodes that are created for the container"
+          },
+          "GIDMappings": {
+            "goType": "[]LinuxIDMapping",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "gidMappings",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "GIDMapping specifies group mappings for supporting user namespaces."
+          },
+          "IntelRdt": {
+            "goType": "*LinuxIntelRdt",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "intelRdt",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "IntelRdt contains Intel Resource Director Technology (RDT) information for\nhandling resource constraints and monitoring metrics (e.g., L3 cache, memory bandwidth) for the container"
+          },
+          "MaskedPaths": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "maskedPaths",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "MaskedPaths masks over the provided paths inside the container."
+          },
+          "MountLabel": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "mountLabel",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "MountLabel specifies the selinux context for the mounts in the container."
+          },
+          "Namespaces": {
+            "goType": "[]LinuxNamespace",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "namespaces",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Namespaces contains the namespaces that are created and/or joined by the container"
+          },
+          "NetDevices": {
+            "goType": "map[string]LinuxNetDevice",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "netDevices",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "NetDevices are key-value pairs, keyed by network device name on the host, moved to the container's network namespace."
+          },
+          "Personality": {
+            "goType": "*LinuxPersonality",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "personality",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Personality contains configuration for the Linux personality syscall"
+          },
+          "ReadonlyPaths": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "readonlyPaths",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "ReadonlyPaths sets the provided paths as RO inside the container."
+          },
+          "Resources": {
+            "goType": "*LinuxResources",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "resources",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Resources contain cgroup information for handling resource constraints\nfor the container"
+          },
+          "RootfsPropagation": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "rootfsPropagation",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "RootfsPropagation is the rootfs mount propagation mode for the container."
+          },
+          "Seccomp": {
+            "goType": "*LinuxSeccomp",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "seccomp",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Seccomp specifies the seccomp security settings for the container."
+          },
+          "Sysctl": {
+            "goType": "map[string]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "sysctl",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Sysctl are a set of key value pairs that are set for the container on start"
+          },
+          "TimeOffsets": {
+            "goType": "map[string]LinuxTimeOffset",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "timeOffsets",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "TimeOffsets specifies the offset for supporting time namespaces."
+          },
+          "UIDMappings": {
+            "goType": "[]LinuxIDMapping",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "uidMappings",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "UIDMapping specifies user mappings for supporting user namespaces."
+          }
+        }
+      },
+      "LinuxBlockIO": {
+        "fields": {
+          "LeafWeight": {
+            "goType": "*uint16",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "leafWeight",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Specifies tasks' weight in the given cgroup while competing with the cgroup's child cgroups, CFQ scheduler only"
+          },
+          "ThrottleReadBpsDevice": {
+            "goType": "[]LinuxThrottleDevice",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "throttleReadBpsDevice",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "IO read rate limit per cgroup per device, bytes per second"
+          },
+          "ThrottleReadIOPSDevice": {
+            "goType": "[]LinuxThrottleDevice",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "throttleReadIOPSDevice",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "IO read rate limit per cgroup per device, IO per second"
+          },
+          "ThrottleWriteBpsDevice": {
+            "goType": "[]LinuxThrottleDevice",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "throttleWriteBpsDevice",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "IO write rate limit per cgroup per device, bytes per second"
+          },
+          "ThrottleWriteIOPSDevice": {
+            "goType": "[]LinuxThrottleDevice",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "throttleWriteIOPSDevice",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "IO write rate limit per cgroup per device, IO per second"
+          },
+          "Weight": {
+            "goType": "*uint16",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "weight",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Specifies per cgroup weight"
+          },
+          "WeightDevice": {
+            "goType": "[]LinuxWeightDevice",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "weightDevice",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Weight per cgroup per device, can override BlkioWeight"
+          }
+        }
+      },
+      "LinuxBlockIODevice": {
+        "fields": {
+          "Major": {
+            "goType": "int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "major"
+              }
+            ],
+            "documentation": "Major is the device's major number."
+          },
+          "Minor": {
+            "goType": "int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "minor"
+              }
+            ],
+            "documentation": "Minor is the device's minor number."
+          }
+        }
+      },
+      "LinuxCPU": {
+        "fields": {
+          "Burst": {
+            "goType": "*uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "burst",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "CPU hardcap burst limit (in usecs). Allowed accumulated cpu time additionally for burst in a\ngiven period."
+          },
+          "Cpus": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "cpus",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "CPUs to use within the cpuset. Default is to use any CPU available."
+          },
+          "Idle": {
+            "goType": "*int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "idle",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "cgroups are configured with minimum weight, 0: default behavior, 1: SCHED_IDLE."
+          },
+          "Mems": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "mems",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "List of memory nodes in the cpuset. Default is to use any available memory node."
+          },
+          "Period": {
+            "goType": "*uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "period",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "CPU period to be used for hardcapping (in usecs)."
+          },
+          "Quota": {
+            "goType": "*int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "quota",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "CPU hardcap limit (in usecs). Allowed cpu time in a given period."
+          },
+          "RealtimePeriod": {
+            "goType": "*uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "realtimePeriod",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "CPU period to be used for realtime scheduling (in usecs)."
+          },
+          "RealtimeRuntime": {
+            "goType": "*int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "realtimeRuntime",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "How much time realtime scheduling may use (in usecs)."
+          },
+          "Shares": {
+            "goType": "*uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "shares",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "CPU shares (relative weight (ratio) vs. other cgroups with cpu shares)."
+          }
+        }
+      },
+      "LinuxCapabilities": {
+        "fields": {
+          "Ambient": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "ambient",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ],
+            "documentation": "Ambient is the ambient set of capabilities that are kept."
+          },
+          "Bounding": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "bounding",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ],
+            "documentation": "Bounding is the set of capabilities checked by the kernel."
+          },
+          "Effective": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "effective",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ],
+            "documentation": "Effective is the set of capabilities checked by the kernel."
+          },
+          "Inheritable": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "inheritable",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ],
+            "documentation": "Inheritable is the capabilities preserved across execve."
+          },
+          "Permitted": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "permitted",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ],
+            "documentation": "Permitted is the limiting superset for effective capabilities."
+          }
+        }
+      },
+      "LinuxDevice": {
+        "fields": {
+          "FileMode": {
+            "goType": "*os.FileMode",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "fileMode",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "FileMode permission bits for the device."
+          },
+          "GID": {
+            "goType": "*uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "gid",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Gid of the device."
+          },
+          "Major": {
+            "goType": "int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "major"
+              }
+            ],
+            "documentation": "Major is the device's major number."
+          },
+          "Minor": {
+            "goType": "int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "minor"
+              }
+            ],
+            "documentation": "Minor is the device's minor number."
+          },
+          "Path": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "path"
+              }
+            ],
+            "documentation": "Path to the device."
+          },
+          "Type": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "type"
+              }
+            ],
+            "documentation": "Device type, block, char, etc."
+          },
+          "UID": {
+            "goType": "*uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "uid",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "UID of the device."
+          }
+        }
+      },
+      "LinuxDeviceCgroup": {
+        "fields": {
+          "Access": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "access",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Cgroup access permissions format, rwm."
+          },
+          "Allow": {
+            "goType": "bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "allow"
+              }
+            ],
+            "documentation": "Allow or deny"
+          },
+          "Major": {
+            "goType": "*int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "major",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Major is the device's major number."
+          },
+          "Minor": {
+            "goType": "*int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "minor",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Minor is the device's minor number."
+          },
+          "Type": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "type",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Device type, block, char, etc."
+          }
+        }
+      },
+      "LinuxHugepageLimit": {
+        "fields": {
+          "Limit": {
+            "goType": "uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "limit"
+              }
+            ],
+            "documentation": "Limit is the limit of \"hugepagesize\" hugetlb reservations (if supported) or usage."
+          },
+          "Pagesize": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "pageSize"
+              }
+            ],
+            "documentation": "Pagesize is the hugepage size.\nFormat: \"\u003csize\u003e\u003cunit-prefix\u003eB' (e.g. 64KB, 2MB, 1GB, etc.)."
+          }
+        }
+      },
+      "LinuxIDMapping": {
+        "fields": {
+          "ContainerID": {
+            "goType": "uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "containerID"
+              }
+            ],
+            "documentation": "ContainerID is the starting UID/GID in the container"
+          },
+          "HostID": {
+            "goType": "uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "hostID"
+              }
+            ],
+            "documentation": "HostID is the starting UID/GID on the host to be mapped to 'ContainerID'"
+          },
+          "Size": {
+            "goType": "uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "size"
+              }
+            ],
+            "documentation": "Size is the number of IDs to be mapped"
+          }
+        }
+      },
+      "LinuxIOPriority": {
+        "fields": {
+          "Class": {
+            "goType": "IOPriorityClass",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "class"
+              }
+            ]
+          },
+          "Priority": {
+            "goType": "int",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "priority"
+              }
+            ]
+          }
+        }
+      },
+      "LinuxIntelRdt": {
+        "fields": {
+          "ClosID": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "closID",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "The identity for RDT Class of Service"
+          },
+          "EnableCMT": {
+            "goType": "bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "enableCMT",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "EnableCMT is the flag to indicate if the Intel RDT CMT is enabled. CMT (Cache Monitoring Technology) supports monitoring of\nthe last-level cache (LLC) occupancy for the container."
+          },
+          "EnableMBM": {
+            "goType": "bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "enableMBM",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "EnableMBM is the flag to indicate if the Intel RDT MBM is enabled. MBM (Memory Bandwidth Monitoring) supports monitoring of\ntotal and local memory bandwidth for the container."
+          },
+          "L3CacheSchema": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "l3CacheSchema",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "The schema for L3 cache id and capacity bitmask (CBM)\nFormat: \"L3:\u003ccache_id0\u003e=\u003ccbm0\u003e;\u003ccache_id1\u003e=\u003ccbm1\u003e;...\"\nNOTE: Should not be specified if Schemata is non-empty."
+          },
+          "MemBwSchema": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "memBwSchema",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "The schema of memory bandwidth per L3 cache id\nFormat: \"MB:\u003ccache_id0\u003e=bandwidth0;\u003ccache_id1\u003e=bandwidth1;...\"\nThe unit of memory bandwidth is specified in \"percentages\" by\ndefault, and in \"MBps\" if MBA Software Controller is enabled.\nNOTE: Should not be specified if Schemata is non-empty."
+          },
+          "Schemata": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "schemata",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Schemata specifies the complete schemata to be written as is to the\nschemata file in resctrl fs. Each element represents a single line in the schemata file.\nNOTE: This will overwrite schemas specified in the L3CacheSchema and/or\nMemBwSchema fields."
+          }
+        }
+      },
+      "LinuxInterfacePriority": {
+        "fields": {
+          "Name": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "name"
+              }
+            ],
+            "documentation": "Name is the name of the network interface"
+          },
+          "Priority": {
+            "goType": "uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "priority"
+              }
+            ],
+            "documentation": "Priority for the interface"
+          }
+        }
+      },
+      "LinuxMemory": {
+        "fields": {
+          "CheckBeforeUpdate": {
+            "goType": "*bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "checkBeforeUpdate",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "CheckBeforeUpdate enables checking if a new memory limit is lower\nthan the current usage during update, and if so, rejecting the new\nlimit."
+          },
+          "DisableOOMKiller": {
+            "goType": "*bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "disableOOMKiller",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "DisableOOMKiller disables the OOM killer for out of memory conditions"
+          },
+          "Kernel": {
+            "goType": "*int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "kernel",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Kernel memory limit (in bytes).\n\nDeprecated: kernel-memory limits are not supported in cgroups v2, and\nwere obsoleted in [kernel v5.4]. This field should no longer be used,\nas it may be ignored by runtimes.\n\n[kernel v5.4]: https://github.com/torvalds/linux/commit/0158115f702b0ba208ab0"
+          },
+          "KernelTCP": {
+            "goType": "*int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "kernelTCP",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Kernel memory limit for tcp (in bytes)"
+          },
+          "Limit": {
+            "goType": "*int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "limit",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Memory limit (in bytes)."
+          },
+          "Reservation": {
+            "goType": "*int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "reservation",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Memory reservation or soft_limit (in bytes)."
+          },
+          "Swap": {
+            "goType": "*int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "swap",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Total memory limit (memory + swap)."
+          },
+          "Swappiness": {
+            "goType": "*uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "swappiness",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "How aggressive the kernel will swap memory pages."
+          },
+          "UseHierarchy": {
+            "goType": "*bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "useHierarchy",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Enables hierarchical memory accounting"
+          }
+        }
+      },
+      "LinuxNamespace": {
+        "fields": {
+          "Path": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "path",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Path is a path to an existing namespace persisted on disk that can be joined\nand is of the same type"
+          },
+          "Type": {
+            "goType": "LinuxNamespaceType",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "type"
+              }
+            ],
+            "documentation": "Type is the type of namespace"
+          }
+        }
+      },
+      "LinuxNetDevice": {
+        "fields": {
+          "Name": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "name",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Name of the device in the container namespace"
+          }
+        }
+      },
+      "LinuxNetwork": {
+        "fields": {
+          "ClassID": {
+            "goType": "*uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "classID",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Set class identifier for container's network packets"
+          },
+          "Priorities": {
+            "goType": "[]LinuxInterfacePriority",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "priorities",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Set priority of network traffic for container"
+          }
+        }
+      },
+      "LinuxPersonality": {
+        "fields": {
+          "Domain": {
+            "goType": "LinuxPersonalityDomain",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "domain"
+              }
+            ],
+            "documentation": "Domain for the personality"
+          },
+          "Flags": {
+            "goType": "[]LinuxPersonalityFlag",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "flags",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Additional flags"
+          }
+        }
+      },
+      "LinuxPids": {
+        "fields": {
+          "Limit": {
+            "goType": "int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "limit"
+              }
+            ],
+            "documentation": "Maximum number of PIDs. Default is \"no limit\"."
+          }
+        }
+      },
+      "LinuxRdma": {
+        "fields": {
+          "HcaHandles": {
+            "goType": "*uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "hcaHandles",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Maximum number of HCA handles that can be opened. Default is \"no limit\"."
+          },
+          "HcaObjects": {
+            "goType": "*uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "hcaObjects",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Maximum number of HCA objects that can be created. Default is \"no limit\"."
+          }
+        }
+      },
+      "LinuxResources": {
+        "fields": {
+          "BlockIO": {
+            "goType": "*LinuxBlockIO",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "blockIO",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "BlockIO restriction configuration"
+          },
+          "CPU": {
+            "goType": "*LinuxCPU",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "cpu",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "CPU resource restriction configuration"
+          },
+          "Devices": {
+            "goType": "[]LinuxDeviceCgroup",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "devices",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Devices configures the device allowlist."
+          },
+          "HugepageLimits": {
+            "goType": "[]LinuxHugepageLimit",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "hugepageLimits",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Hugetlb limits (in bytes). Default to reservation limits if supported."
+          },
+          "Memory": {
+            "goType": "*LinuxMemory",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "memory",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Memory restriction configuration"
+          },
+          "Network": {
+            "goType": "*LinuxNetwork",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "network",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Network restriction configuration"
+          },
+          "Pids": {
+            "goType": "*LinuxPids",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "pids",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Task resource restriction configuration."
+          },
+          "Rdma": {
+            "goType": "map[string]LinuxRdma",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "rdma",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Rdma resource restriction configuration.\nLimits are a set of key value pairs that define RDMA resource limits,\nwhere the key is device name and value is resource limits."
+          },
+          "Unified": {
+            "goType": "map[string]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "unified",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Unified resources."
+          }
+        }
+      },
+      "LinuxSeccomp": {
+        "fields": {
+          "Architectures": {
+            "goType": "[]Arch",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "architectures",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "DefaultAction": {
+            "goType": "LinuxSeccompAction",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "defaultAction"
+              }
+            ]
+          },
+          "DefaultErrnoRet": {
+            "goType": "*uint",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "defaultErrnoRet",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "Flags": {
+            "goType": "[]LinuxSeccompFlag",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "flags",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "ListenerMetadata": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "listenerMetadata",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "ListenerPath": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "listenerPath",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "Syscalls": {
+            "goType": "[]LinuxSyscall",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "syscalls",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "LinuxSeccompArg": {
+        "fields": {
+          "Index": {
+            "goType": "uint",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "index"
+              }
+            ]
+          },
+          "Op": {
+            "goType": "LinuxSeccompOperator",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "op"
+              }
+            ]
+          },
+          "Value": {
+            "goType": "uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "value"
+              }
+            ]
+          },
+          "ValueTwo": {
+            "goType": "uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "valueTwo",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "LinuxSyscall": {
+        "fields": {
+          "Action": {
+            "goType": "LinuxSeccompAction",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "action"
+              }
+            ]
+          },
+          "Args": {
+            "goType": "[]LinuxSeccompArg",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "args",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "ErrnoRet": {
+            "goType": "*uint",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "errnoRet",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "Names": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "names"
+              }
+            ]
+          }
+        }
+      },
+      "LinuxThrottleDevice": {
+        "embeds": [
+          "LinuxBlockIODevice"
+        ],
+        "fields": {
+          "Rate": {
+            "goType": "uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "rate"
+              }
+            ],
+            "documentation": "Rate is the IO rate limit per cgroup per device"
+          }
+        }
+      },
+      "LinuxTimeOffset": {
+        "fields": {
+          "Nanosecs": {
+            "goType": "uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "nanosecs",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Nanosecs is the additional offset for Secs (in nanosecs)"
+          },
+          "Secs": {
+            "goType": "int64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "secs",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Secs is the offset of clock (in secs) in the container"
+          }
+        }
+      },
+      "LinuxWeightDevice": {
+        "embeds": [
+          "LinuxBlockIODevice"
+        ],
+        "fields": {
+          "LeafWeight": {
+            "goType": "*uint16",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "leafWeight",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "LeafWeight is the bandwidth rate for the device while competing with the cgroup's child cgroups, CFQ scheduler only"
+          },
+          "Weight": {
+            "goType": "*uint16",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "weight",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Weight is the bandwidth rate for the device."
+          }
+        }
+      },
+      "Mount": {
+        "fields": {
+          "Destination": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "destination"
+              }
+            ],
+            "documentation": "Destination is the absolute path where the mount will be placed in the container."
+          },
+          "GIDMappings": {
+            "goType": "[]LinuxIDMapping",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "gidMappings",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ]
+          },
+          "Options": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "options",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Options are fstab style mount options."
+          },
+          "Source": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "source",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Source specifies the source path of the mount."
+          },
+          "Type": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "type",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux",
+                "options": [
+                  "solaris",
+                  "zos"
+                ]
+              }
+            ],
+            "documentation": "Type specifies the mount kind."
+          },
+          "UIDMappings": {
+            "goType": "[]LinuxIDMapping",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "uidMappings",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ],
+            "documentation": "UID/GID mappings used for changing file owners w/o calling chown, fs should support it.\nEvery mount point could have its own mapping."
+          }
+        }
+      },
+      "POSIXRlimit": {
+        "fields": {
+          "Hard": {
+            "goType": "uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "hard"
+              }
+            ],
+            "documentation": "Hard is the hard limit for the specified type"
+          },
+          "Soft": {
+            "goType": "uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "soft"
+              }
+            ],
+            "documentation": "Soft is the soft limit for the specified type"
+          },
+          "Type": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "type"
+              }
+            ],
+            "documentation": "Type of the rlimit to set"
+          }
+        }
+      },
+      "Process": {
+        "fields": {
+          "ApparmorProfile": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "apparmorProfile",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ],
+            "documentation": "ApparmorProfile specifies the apparmor profile for the container."
+          },
+          "Args": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "args",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Args specifies the binary and arguments for the application to execute."
+          },
+          "Capabilities": {
+            "goType": "*LinuxCapabilities",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "capabilities",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ],
+            "documentation": "Capabilities are Linux capabilities that are kept for the process."
+          },
+          "CommandLine": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "commandLine",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "windows"
+              }
+            ],
+            "documentation": "CommandLine specifies the full command line for the application to execute on Windows."
+          },
+          "ConsoleSize": {
+            "goType": "*Box",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "consoleSize",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "ConsoleSize specifies the size of the console."
+          },
+          "Cwd": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "cwd"
+              }
+            ],
+            "documentation": "Cwd is the current working directory for the process and must be\nrelative to the container's root."
+          },
+          "Env": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "env",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Env populates the process environment for the process."
+          },
+          "ExecCPUAffinity": {
+            "goType": "*CPUAffinity",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "execCPUAffinity",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ],
+            "documentation": "ExecCPUAffinity specifies CPU affinity for exec processes."
+          },
+          "IOPriority": {
+            "goType": "*LinuxIOPriority",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "ioPriority",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ],
+            "documentation": "IOPriority contains the I/O priority settings for the cgroup."
+          },
+          "NoNewPrivileges": {
+            "goType": "bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "noNewPrivileges",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux",
+                "options": [
+                  "zos"
+                ]
+              }
+            ],
+            "documentation": "NoNewPrivileges controls whether additional privileges could be gained by processes in the container."
+          },
+          "OOMScoreAdj": {
+            "goType": "*int",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "oomScoreAdj",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ],
+            "documentation": "Specify an oom_score_adj for the container."
+          },
+          "Rlimits": {
+            "goType": "[]POSIXRlimit",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "rlimits",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux",
+                "options": [
+                  "solaris",
+                  "zos"
+                ]
+              }
+            ],
+            "documentation": "Rlimits specifies rlimit options to apply to the process."
+          },
+          "Scheduler": {
+            "goType": "*Scheduler",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "scheduler",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ],
+            "documentation": "Scheduler specifies the scheduling attributes for a process"
+          },
+          "SelinuxLabel": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "selinuxLabel",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ],
+            "documentation": "SelinuxLabel specifies the selinux context that the container process is run as."
+          },
+          "Terminal": {
+            "goType": "bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "terminal",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Terminal creates an interactive terminal for the container."
+          },
+          "User": {
+            "goType": "User",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "user"
+              }
+            ],
+            "documentation": "User specifies user information for the process."
+          }
+        }
+      },
+      "Root": {
+        "fields": {
+          "Path": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "path"
+              }
+            ],
+            "documentation": "Path is the absolute path to the container's root filesystem."
+          },
+          "Readonly": {
+            "goType": "bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "readonly",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Readonly makes the root filesystem for the container readonly before the process is executed."
+          }
+        }
+      },
+      "Scheduler": {
+        "fields": {
+          "Deadline": {
+            "goType": "uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "deadline",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Deadline is the absolute deadline for the process to complete its execution."
+          },
+          "Flags": {
+            "goType": "[]LinuxSchedulerFlag",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "flags",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Flags is an array of scheduling flags."
+          },
+          "Nice": {
+            "goType": "int32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "nice",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Nice is the nice value for the process, which affects its priority."
+          },
+          "Period": {
+            "goType": "uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "period",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Period is the length of the period in nanoseconds used for determining the process runtime."
+          },
+          "Policy": {
+            "goType": "LinuxSchedulerPolicy",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "policy"
+              }
+            ],
+            "documentation": "Policy represents the scheduling policy (e.g., SCHED_FIFO, SCHED_RR, SCHED_OTHER)."
+          },
+          "Priority": {
+            "goType": "int32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "priority",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Priority represents the static priority of the process."
+          },
+          "Runtime": {
+            "goType": "uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "runtime",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Runtime is the amount of time in nanoseconds during which the process\nis allowed to run in a given period."
+          }
+        }
+      },
+      "Solaris": {
+        "fields": {
+          "Anet": {
+            "goType": "[]SolarisAnet",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "anet",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Specification for automatic creation of network resources for this container."
+          },
+          "CappedCPU": {
+            "goType": "*SolarisCappedCPU",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "cappedCPU",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Set limit on the amount of CPU time that can be used by container."
+          },
+          "CappedMemory": {
+            "goType": "*SolarisCappedMemory",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "cappedMemory",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "The physical and swap caps on the memory that can be used by this container."
+          },
+          "LimitPriv": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "limitpriv",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Maximum set of privileges any process in this container can obtain."
+          },
+          "MaxShmMemory": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "maxShmMemory",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "The maximum amount of shared memory allowed for this container."
+          },
+          "Milestone": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "milestone",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "SMF FMRI which should go \"online\" before we start the container process."
+          }
+        }
+      },
+      "SolarisAnet": {
+        "fields": {
+          "Allowedaddr": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "allowedAddress",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "The set of IP addresses that the container can use."
+          },
+          "Configallowedaddr": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "configureAllowedAddress",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Specifies whether allowedAddress limitation is to be applied to the VNIC."
+          },
+          "Defrouter": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "defrouter",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "The value of the optional default router."
+          },
+          "Linkname": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "linkname",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Specify a name for the automatically created VNIC datalink."
+          },
+          "Linkprotection": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "linkProtection",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Enable one or more types of link protection."
+          },
+          "Lowerlink": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "lowerLink",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Specify the link over which the VNIC will be created."
+          },
+          "Macaddress": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "macAddress",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Set the VNIC's macAddress"
+          }
+        }
+      },
+      "SolarisCappedCPU": {
+        "fields": {
+          "Ncpus": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "ncpus",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "SolarisCappedMemory": {
+        "fields": {
+          "Physical": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "physical",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "Swap": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "swap",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "Spec": {
+        "fields": {
+          "Annotations": {
+            "goType": "map[string]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "annotations",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Annotations contains arbitrary metadata for the container."
+          },
+          "Domainname": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "domainname",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Domainname configures the container's domainname."
+          },
+          "Hooks": {
+            "goType": "*Hooks",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "hooks",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux",
+                "options": [
+                  "solaris",
+                  "zos"
+                ]
+              }
+            ],
+            "documentation": "Hooks configures callbacks for container lifecycle events."
+          },
+          "Hostname": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "hostname",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Hostname configures the container's hostname."
+          },
+          "Linux": {
+            "goType": "*Linux",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "linux",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux"
+              }
+            ],
+            "documentation": "Linux is platform-specific configuration for Linux based containers."
+          },
+          "Mounts": {
+            "goType": "[]Mount",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "mounts",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Mounts configures additional mounts (on top of Root)."
+          },
+          "Process": {
+            "goType": "*Process",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "process",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Process configures the container process."
+          },
+          "Root": {
+            "goType": "*Root",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "root",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Root configures the container's root filesystem."
+          },
+          "Solaris": {
+            "goType": "*Solaris",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "solaris",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "solaris"
+              }
+            ],
+            "documentation": "Solaris is platform-specific configuration for Solaris based containers."
+          },
+          "VM": {
+            "goType": "*VM",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "vm",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "vm"
+              }
+            ],
+            "documentation": "VM specifies configuration for virtual-machine-based containers."
+          },
+          "Version": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "ociVersion"
+              }
+            ],
+            "documentation": "Version of the Open Container Initiative Runtime Specification with which the bundle complies."
+          },
+          "Windows": {
+            "goType": "*Windows",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "windows",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "windows"
+              }
+            ],
+            "documentation": "Windows is platform-specific configuration for Windows based containers."
+          },
+          "ZOS": {
+            "goType": "*ZOS",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "zos",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "zos"
+              }
+            ],
+            "documentation": "ZOS is platform-specific configuration for z/OS based containers."
+          }
+        }
+      },
+      "User": {
+        "fields": {
+          "AdditionalGids": {
+            "goType": "[]uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "additionalGids",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux",
+                "options": [
+                  "solaris"
+                ]
+              }
+            ],
+            "documentation": "AdditionalGids are additional group ids set for the container's process."
+          },
+          "GID": {
+            "goType": "uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "gid"
+              },
+              {
+                "type": "platform",
+                "argument": "linux",
+                "options": [
+                  "solaris",
+                  "zos"
+                ]
+              }
+            ],
+            "documentation": "GID is the group id."
+          },
+          "UID": {
+            "goType": "uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "uid"
+              },
+              {
+                "type": "platform",
+                "argument": "linux",
+                "options": [
+                  "solaris",
+                  "zos"
+                ]
+              }
+            ],
+            "documentation": "UID is the user id."
+          },
+          "Umask": {
+            "goType": "*uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "umask",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "linux",
+                "options": [
+                  "solaris",
+                  "zos"
+                ]
+              }
+            ],
+            "documentation": "Umask is the umask for the init process."
+          },
+          "Username": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "username",
+                "options": [
+                  "omitempty"
+                ]
+              },
+              {
+                "type": "platform",
+                "argument": "windows"
+              }
+            ],
+            "documentation": "Username is the user name."
+          }
+        }
+      },
+      "VM": {
+        "fields": {
+          "Hypervisor": {
+            "goType": "VMHypervisor",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "hypervisor",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Hypervisor specifies hypervisor-related configuration for virtual-machine-based containers."
+          },
+          "Image": {
+            "goType": "VMImage",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "image",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Image specifies guest image related configuration for virtual-machine-based containers."
+          },
+          "Kernel": {
+            "goType": "VMKernel",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "kernel"
+              }
+            ],
+            "documentation": "Kernel specifies kernel-related configuration for virtual-machine-based containers."
+          }
+        }
+      },
+      "VMHypervisor": {
+        "fields": {
+          "Parameters": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "parameters",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Parameters specifies parameters to pass to the hypervisor."
+          },
+          "Path": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "path"
+              }
+            ],
+            "documentation": "Path is the host path to the hypervisor used to manage the virtual machine."
+          }
+        }
+      },
+      "VMImage": {
+        "fields": {
+          "Format": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "format"
+              }
+            ],
+            "documentation": "Format is the root image format type (e.g. \"qcow2\", \"raw\", \"vhd\", etc)."
+          },
+          "Path": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "path"
+              }
+            ],
+            "documentation": "Path is the host path to the root image that the VM kernel would boot into."
+          }
+        }
+      },
+      "VMKernel": {
+        "fields": {
+          "InitRD": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "initrd",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "InitRD is the host path to an initial ramdisk to be used by the kernel."
+          },
+          "Parameters": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "parameters",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Parameters specifies parameters to pass to the kernel."
+          },
+          "Path": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "path"
+              }
+            ],
+            "documentation": "Path is the host path to the kernel used to boot the virtual machine."
+          }
+        }
+      },
+      "Windows": {
+        "fields": {
+          "Devices": {
+            "goType": "[]WindowsDevice",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "devices",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Devices are the list of devices to be mapped into the container."
+          },
+          "HyperV": {
+            "goType": "*WindowsHyperV",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "hyperv",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "HyperV contains information for running a container with Hyper-V isolation."
+          },
+          "IgnoreFlushesDuringBoot": {
+            "goType": "bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "ignoreFlushesDuringBoot",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "IgnoreFlushesDuringBoot indicates if the container is being started in a mode where disk writes are not flushed during its boot process."
+          },
+          "LayerFolders": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "layerFolders"
+              }
+            ],
+            "documentation": "LayerFolders contains a list of absolute paths to directories containing image layers."
+          },
+          "Network": {
+            "goType": "*WindowsNetwork",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "network",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Network restriction configuration."
+          },
+          "Resources": {
+            "goType": "*WindowsResources",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "resources",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Resources contains information for handling resource constraints for the container."
+          },
+          "Servicing": {
+            "goType": "bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "servicing",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Servicing indicates if the container is being started in a mode to apply a Windows Update servicing operation."
+          }
+        }
+      },
+      "WindowsCPUGroupAffinity": {
+        "fields": {
+          "Group": {
+            "goType": "uint32",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "group",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Processor group the mask refers to, as returned by GetLogicalProcessorInformationEx."
+          },
+          "Mask": {
+            "goType": "uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "mask",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "CPU mask relative to this CPU group."
+          }
+        }
+      },
+      "WindowsCPUResources": {
+        "fields": {
+          "Affinity": {
+            "goType": "[]WindowsCPUGroupAffinity",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "affinity",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Set of CPUs to affinitize for this container."
+          },
+          "Count": {
+            "goType": "*uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "count",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Count is the number of CPUs available to the container. It represents the\nfraction of the configured processor `count` in a container in relation\nto the processors available in the host. The fraction ultimately\ndetermines the portion of processor cycles that the threads in a\ncontainer can use during each scheduling interval, as the number of\ncycles per 10,000 cycles."
+          },
+          "Maximum": {
+            "goType": "*uint16",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "maximum",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Maximum determines the portion of processor cycles that the threads in a\ncontainer can use during each scheduling interval, as the number of\ncycles per 10,000 cycles. Set processor `maximum` to a percentage times\n100."
+          },
+          "Shares": {
+            "goType": "*uint16",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "shares",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Shares limits the share of processor time given to the container relative\nto other workloads on the processor. The processor `shares` (`weight` at\nthe platform level) is a value between 0 and 10000."
+          }
+        }
+      },
+      "WindowsDevice": {
+        "fields": {
+          "ID": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "id"
+              }
+            ],
+            "documentation": "Device identifier: interface class GUID, etc."
+          },
+          "IDType": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "idType"
+              }
+            ],
+            "documentation": "Device identifier type: \"class\", etc."
+          }
+        }
+      },
+      "WindowsHyperV": {
+        "fields": {
+          "UtilityVMPath": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "utilityVMPath",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "UtilityVMPath is an optional path to the image used for the Utility VM."
+          }
+        }
+      },
+      "WindowsMemoryResources": {
+        "fields": {
+          "Limit": {
+            "goType": "*uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "limit",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Memory limit in bytes."
+          }
+        }
+      },
+      "WindowsNetwork": {
+        "fields": {
+          "AllowUnqualifiedDNSQuery": {
+            "goType": "bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "allowUnqualifiedDNSQuery",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Specifies if unqualified DNS name resolution is allowed."
+          },
+          "DNSSearchList": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "DNSSearchList",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Comma separated list of DNS suffixes to use for name resolution."
+          },
+          "EndpointList": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "endpointList",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "List of HNS endpoints that the container should connect to."
+          },
+          "NetworkNamespace": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "networkNamespace",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "name (ID) of the network namespace that will be used for the container."
+          },
+          "NetworkSharedContainerName": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "networkSharedContainerName",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Name (ID) of the container that we will share with the network stack."
+          }
+        }
+      },
+      "WindowsResources": {
+        "fields": {
+          "CPU": {
+            "goType": "*WindowsCPUResources",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "cpu",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "CPU resource restriction configuration."
+          },
+          "Memory": {
+            "goType": "*WindowsMemoryResources",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "memory",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Memory restriction configuration."
+          },
+          "Storage": {
+            "goType": "*WindowsStorageResources",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "storage",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Storage restriction configuration."
+          }
+        }
+      },
+      "WindowsStorageResources": {
+        "fields": {
+          "Bps": {
+            "goType": "*uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "bps",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Specifies maximum bytes per second for the system drive."
+          },
+          "Iops": {
+            "goType": "*uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "iops",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Specifies maximum Iops for the system drive."
+          },
+          "SandboxSize": {
+            "goType": "*uint64",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "sandboxSize",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Sandbox size specifies the minimum size of the system drive in bytes."
+          }
+        }
+      },
+      "ZOS": {
+        "fields": {
+          "Namespaces": {
+            "goType": "[]ZOSNamespace",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "namespaces",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Namespaces contains the namespaces that are created and/or joined by the container"
+          }
+        }
+      },
+      "ZOSNamespace": {
+        "fields": {
+          "Path": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "path",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Path is a path to an existing namespace persisted on disk that can be joined\nand is of the same type"
+          },
+          "Type": {
+            "goType": "ZOSNamespaceType",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "type"
+              }
+            ],
+            "documentation": "Type is the type of namespace"
+          }
+        }
+      }
+    }
+  },
+  {
+    "module": "specs-go",
+    "package": "features",
+    "location": "features/features.go",
+    "structs": {
+      "Apparmor": {
+        "fields": {
+          "Enabled": {
+            "goType": "*bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "enabled",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Enabled is true if AppArmor support is compiled in.\nUnrelated to whether the host supports AppArmor or not.\nNil value means \"unknown\", not \"false\"."
+          }
+        }
+      },
+      "Cgroup": {
+        "fields": {
+          "Rdma": {
+            "goType": "*bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "rdma",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Rdma represents whether RDMA cgroup support is compiled in.\nUnrelated to whether the host supports RDMA or not.\nNil value means \"unknown\", not \"false\"."
+          },
+          "Systemd": {
+            "goType": "*bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "systemd",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Systemd represents whether systemd-cgroup support is compiled in.\nUnrelated to whether the host uses systemd or not.\nNil value means \"unknown\", not \"false\"."
+          },
+          "SystemdUser": {
+            "goType": "*bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "systemdUser",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "SystemdUser represents whether user-scoped systemd-cgroup support is compiled in.\nUnrelated to whether the host uses systemd or not.\nNil value means \"unknown\", not \"false\"."
+          },
+          "V1": {
+            "goType": "*bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "v1",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "V1 represents whether Cgroup v1 support is compiled in.\nUnrelated to whether the host uses cgroup v1 or not.\nNil value means \"unknown\", not \"false\"."
+          },
+          "V2": {
+            "goType": "*bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "v2",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "V2 represents whether Cgroup v2 support is compiled in.\nUnrelated to whether the host uses cgroup v2 or not.\nNil value means \"unknown\", not \"false\"."
+          }
+        }
+      },
+      "Features": {
+        "fields": {
+          "Annotations": {
+            "goType": "map[string]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "annotations",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Annotations contains implementation-specific annotation strings,\nsuch as the implementation version, and third-party extensions."
+          },
+          "Hooks": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "hooks",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Hooks is the list of the recognized hook names, e.g., \"createRuntime\".\nNil value means \"unknown\", not \"no support for any hook\"."
+          },
+          "Linux": {
+            "goType": "*Linux",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "linux",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Linux is specific to Linux."
+          },
+          "MountOptions": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "mountOptions",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "MountOptions is the list of the recognized mount options, e.g., \"ro\".\nNil value means \"unknown\", not \"no support for any mount option\".\nThis list does not contain filesystem-specific options passed to mount(2) syscall as (const void *)."
+          },
+          "OCIVersionMax": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "ociVersionMax",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "OCIVersionMax is the maximum OCI Runtime Spec version recognized by the runtime, e.g., \"1.0.2-dev\"."
+          },
+          "OCIVersionMin": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "ociVersionMin",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "OCIVersionMin is the minimum OCI Runtime Spec version recognized by the runtime, e.g., \"1.0.0\"."
+          },
+          "PotentiallyUnsafeConfigAnnotations": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "potentiallyUnsafeConfigAnnotations",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "PotentiallyUnsafeConfigAnnotations the list of the potential unsafe annotations\nthat may appear in `config.json`.\n\nA value that ends with \".\" is interpreted as a prefix of annotations."
+          }
+        }
+      },
+      "IDMap": {
+        "fields": {
+          "Enabled": {
+            "goType": "*bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "enabled",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Enabled represents whether idmap mounts supports is compiled in.\nUnrelated to whether the host supports it or not.\nNil value means \"unknown\", not \"false\"."
+          }
+        }
+      },
+      "IntelRdt": {
+        "fields": {
+          "Enabled": {
+            "goType": "*bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "enabled",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Enabled is true if Intel RDT support is compiled in.\nUnrelated to whether the host supports Intel RDT or not.\nNil value means \"unknown\", not \"false\"."
+          }
+        }
+      },
+      "Linux": {
+        "fields": {
+          "Apparmor": {
+            "goType": "*Apparmor",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "apparmor",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "Capabilities": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "capabilities",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Capabilities is the list of the recognized capabilities , e.g., \"CAP_SYS_ADMIN\".\nNil value means \"unknown\", not \"no support for any capability\"."
+          },
+          "Cgroup": {
+            "goType": "*Cgroup",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "cgroup",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "IntelRdt": {
+            "goType": "*IntelRdt",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "intelRdt",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "MountExtensions": {
+            "goType": "*MountExtensions",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "mountExtensions",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "Namespaces": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "namespaces",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Namespaces is the list of the recognized namespaces, e.g., \"mount\".\nNil value means \"unknown\", not \"no support for any namespace\"."
+          },
+          "NetDevices": {
+            "goType": "*NetDevices",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "netDevices",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "Seccomp": {
+            "goType": "*Seccomp",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "seccomp",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          },
+          "Selinux": {
+            "goType": "*Selinux",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "selinux",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "MountExtensions": {
+        "fields": {
+          "IDMap": {
+            "goType": "*IDMap",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "idmap",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "IDMap represents the status of idmap mounts support."
+          }
+        }
+      },
+      "NetDevices": {
+        "fields": {
+          "Enabled": {
+            "goType": "*bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "enabled",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Enabled is true if network devices support is compiled in.\nNil value means \"unknown\", not \"false\"."
+          }
+        }
+      },
+      "Seccomp": {
+        "fields": {
+          "Actions": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "actions",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Actions is the list of the recognized actions, e.g., \"SCMP_ACT_NOTIFY\".\nNil value means \"unknown\", not \"no support for any action\"."
+          },
+          "Archs": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "archs",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Archs is the list of the recognized archs, e.g., \"SCMP_ARCH_X86_64\".\nNil value means \"unknown\", not \"no support for any arch\"."
+          },
+          "Enabled": {
+            "goType": "*bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "enabled",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Enabled is true if seccomp support is compiled in.\nNil value means \"unknown\", not \"false\"."
+          },
+          "KnownFlags": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "knownFlags",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "KnownFlags is the list of the recognized filter flags, e.g., \"SECCOMP_FILTER_FLAG_LOG\".\nNil value means \"unknown\", not \"no flags are recognized\"."
+          },
+          "Operators": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "operators",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Operators is the list of the recognized operators, e.g., \"SCMP_CMP_NE\".\nNil value means \"unknown\", not \"no support for any operator\"."
+          },
+          "SupportedFlags": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "supportedFlags",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "SupportedFlags is the list of the supported filter flags, e.g., \"SECCOMP_FILTER_FLAG_LOG\".\nThis list may be a subset of KnownFlags due to some flags\nnot supported by the current kernel and/or libseccomp.\nNil value means \"unknown\", not \"no flags are supported\"."
+          }
+        }
+      },
+      "Selinux": {
+        "fields": {
+          "Enabled": {
+            "goType": "*bool",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "enabled",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Enabled is true if SELinux support is compiled in.\nUnrelated to whether the host supports SELinux or not.\nNil value means \"unknown\", not \"false\"."
+          }
+        }
+      }
+    },
+    "documentation": "Package features provides the Features struct."
+  },
+  {
+    "module": "specs-go",
+    "package": "specs",
+    "location": "state.go",
+    "aliases": {
+      "ContainerState": "string"
+    },
+    "structs": {
+      "ContainerProcessState": {
+        "fields": {
+          "Fds": {
+            "goType": "[]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "fds"
+              }
+            ],
+            "documentation": "Fds is a string array containing the names of the file descriptors passed.\nThe index of the name in this array corresponds to index of the file\ndescriptor in the `SCM_RIGHTS` array."
+          },
+          "Metadata": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "metadata",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Opaque metadata."
+          },
+          "Pid": {
+            "goType": "int",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "pid"
+              }
+            ],
+            "documentation": "Pid is the process ID as seen by the runtime."
+          },
+          "State": {
+            "goType": "State",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "state"
+              }
+            ],
+            "documentation": "State of the container."
+          },
+          "Version": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "ociVersion"
+              }
+            ],
+            "documentation": "Version is the version of the specification that is supported."
+          }
+        }
+      },
+      "State": {
+        "fields": {
+          "Annotations": {
+            "goType": "map[string]string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "annotations",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Annotations are key values associated with the container."
+          },
+          "Bundle": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "bundle"
+              }
+            ],
+            "documentation": "Bundle is the path to the container's bundle directory."
+          },
+          "ID": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "id"
+              }
+            ],
+            "documentation": "ID is the container ID"
+          },
+          "Pid": {
+            "goType": "int",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "pid",
+                "options": [
+                  "omitempty"
+                ]
+              }
+            ],
+            "documentation": "Pid is the process ID for the container process."
+          },
+          "Status": {
+            "goType": "ContainerState",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "status"
+              }
+            ],
+            "documentation": "Status is the runtime status of the container."
+          },
+          "Version": {
+            "goType": "string",
+            "tags": [
+              {
+                "type": "json",
+                "argument": "ociVersion"
+              }
+            ],
+            "documentation": "Version is the version of the specification that is supported."
+          }
+        }
+      }
+    }
+  }
+]
