@@ -47,21 +47,17 @@ type Tag struct {
 }
 
 // AnalyzeRepositories analyzes a local git repository and extracts all types with struct tags usually associated with config files
-func AnalyzeRepositories(sourcePaths []string, destinationPath string) error {
+func AnalyzeRepositories(gitUris []string, destinationPath string) error {
 	analyses := make([]*File, 0)
-	for _, sourcePath := range sourcePaths {
-		localPath := sourcePath
-		cleanup := func() {}
-		if git.IsRemote(sourcePath) {
-			var err error
-			localPath, cleanup, err = git.CloneRepository(sourcePath)
-			if err != nil {
-				return err
-			}
-			defer cleanup()
+	for _, gitUri := range gitUris {
+		var err error
+		localPath, cleanup, err := git.CloneRepository(gitUri)
+		if err != nil {
+			return err
 		}
+		defer cleanup()
 		roots := locateModuleRoots(localPath)
-		result := doAnalyze(localPath, roots)
+		result := doAnalyze(gitUri, localPath, roots)
 		analyses = append(analyses, result...)
 	}
 	content, err := json.MarshalIndent(analyses, "", "  ")
@@ -110,9 +106,9 @@ func resolveModule(path string, modules map[string]string) string {
 	}
 }
 
-func doAnalyze(gitRoot string, moduleRoots map[string]string) []*File {
+func doAnalyze(remoteGitUri string, localGitRoot string, moduleRoots map[string]string) []*File {
 	var analyses []*File
-	err := filepath.WalkDir(gitRoot, func(path string, info os.DirEntry, err error) error {
+	err := filepath.WalkDir(localGitRoot, func(path string, info os.DirEntry, err error) error {
 		if err != nil {
 			return nil
 		}
@@ -121,9 +117,10 @@ func doAnalyze(gitRoot string, moduleRoots map[string]string) []*File {
 			if ext == ".go" && !strings.HasSuffix(path, "_test.go") {
 				currentModulePath := resolveModule(path, moduleRoots)
 				if currentModulePath == "" {
-					currentModulePath = filepath.Base(filepath.Dir(path))
+					remoteGitUrlBase := strings.TrimSuffix(remoteGitUri, ".git")
+					currentModulePath = remoteGitUrlBase + "/" + filepath.Base(filepath.Dir(path))
 				}
-				analysis, err := analyzeModule(gitRoot, path, currentModulePath)
+				analysis, err := analyzeModule(localGitRoot, path, currentModulePath)
 				if err != nil {
 					return err
 				}
