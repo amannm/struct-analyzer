@@ -117,8 +117,12 @@ func doAnalyze(remoteGitUri string, localGitRoot string, moduleRoots map[string]
 			if ext == ".go" && !strings.HasSuffix(path, "_test.go") {
 				currentModulePath := resolveModule(path, moduleRoots)
 				if currentModulePath == "" {
-					remoteGitUrlBase := strings.TrimSuffix(remoteGitUri, ".git")
-					currentModulePath = remoteGitUrlBase + "/" + filepath.Base(filepath.Dir(path))
+					remoteGitUrlBase := strings.TrimPrefix(strings.TrimSuffix(remoteGitUri, ".git"), "https://")
+					internalPath, err := filepath.Rel(localGitRoot, filepath.Dir(path))
+					if err != nil {
+						return err
+					}
+					currentModulePath = remoteGitUrlBase + "/" + internalPath
 				}
 				analysis, err := analyzeModule(localGitRoot, path, currentModulePath)
 				if err != nil {

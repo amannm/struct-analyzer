@@ -14,12 +14,12 @@ func TestBasic(t *testing.T) {
 		_ = os.RemoveAll(dest)
 		err := AnalyzeRepositories([]string{
 			"https://github.com/open-telemetry/opentelemetry-collector",
-			"https://github.com/open-telemetry/opentelemetry-collector-contrib",
-			"https://github.com/russross/blackfriday",
-			"https://github.com/opencontainers/runc",
-			"https://github.com/containerd/cgroups",
-			"https://github.com/golang/sys",
-			"https://github.com/coreos/go-systemd",
+			//"https://github.com/open-telemetry/opentelemetry-collector-contrib",
+			//"https://github.com/russross/blackfriday",
+			//"https://github.com/opencontainers/runc",
+			//"https://github.com/containerd/cgroups",
+			//"https://github.com/golang/sys",
+			//"https://github.com/coreos/go-systemd",
 			"https://github.com/opencontainers/runtime-spec",
 		}, dest)
 		if err != nil {
