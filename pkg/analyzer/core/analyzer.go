@@ -49,24 +49,11 @@ type Tag struct {
 // AnalyzeRepositories analyzes a local git repository and extracts all types with struct tags usually associated with config files
 func AnalyzeRepositories(gitUris []string, destinationPath string) error {
 	analyses := make([]*File, 0)
-	tempDirs := make([]string, 0)
-	defer func() {
-		for _, tempDir := range tempDirs {
-			_ = os.RemoveAll(tempDir)
-		}
-	}()
 	for _, gitUri := range gitUris {
-		tmp, err := os.MkdirTemp("", "repo-*")
+		result, err := analyzeRepository(gitUri)
 		if err != nil {
 			return err
 		}
-		tempDirs = append(tempDirs, tmp)
-		_, err = git.PlainClone(tmp, false, &git.CloneOptions{URL: gitUri, Depth: 1})
-		if err != nil {
-			return err
-		}
-		roots := locateModuleRoots(tmp)
-		result := doAnalyze(gitUri, tmp, roots)
 		analyses = append(analyses, result...)
 	}
 	content, err := json.MarshalIndent(analyses, "", "  ")
@@ -74,6 +61,21 @@ func AnalyzeRepositories(gitUris []string, destinationPath string) error {
 		return err
 	}
 	return os.WriteFile(destinationPath, content, 0644)
+}
+
+func analyzeRepository(gitUri string) ([]*File, error) {
+	tmp, err := os.MkdirTemp("", "repo-*")
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = os.RemoveAll(tmp) }()
+	_, err = git.PlainClone(tmp, false, &git.CloneOptions{URL: gitUri, Depth: 1})
+	if err != nil {
+		return nil, err
+	}
+	roots := locateModuleRoots(tmp)
+	result := analyzeModules(gitUri, tmp, roots)
+	return result, nil
 }
 
 func locateModuleRoots(gitRoot string) map[string]string {
@@ -100,7 +102,40 @@ func locateModuleRoots(gitRoot string) map[string]string {
 	return results
 }
 
-func resolveModule(path string, modules map[string]string) string {
+func analyzeModules(remoteGitUri string, localGitRoot string, moduleRoots map[string]string) []*File {
+	var results []*File
+	err := filepath.WalkDir(localGitRoot, func(path string, info os.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		ext := filepath.Ext(path)
+		if !info.IsDir() {
+			if ext == ".go" && !strings.HasSuffix(path, "_test.go") {
+				moduleIdentifier := resolveModuleIdentifier(path, moduleRoots)
+				if moduleIdentifier == "" {
+					moduleIdentifier, err = calculateModuleIdentifier(remoteGitUri, localGitRoot, path)
+					if err != nil {
+						return err
+					}
+				}
+				result, err := parseModule(localGitRoot, path, moduleIdentifier)
+				if err != nil {
+					return err
+				}
+				if result != nil {
+					results = append(results, result)
+				}
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	return results
+}
+
+func resolveModuleIdentifier(path string, modules map[string]string) string {
 	for {
 		dir, _ := filepath.Split(path)
 		dir = strings.TrimSuffix(dir, "/")
@@ -115,40 +150,7 @@ func resolveModule(path string, modules map[string]string) string {
 	}
 }
 
-func doAnalyze(remoteGitUri string, localGitRoot string, moduleRoots map[string]string) []*File {
-	var analyses []*File
-	err := filepath.WalkDir(localGitRoot, func(path string, info os.DirEntry, err error) error {
-		if err != nil {
-			return nil
-		}
-		ext := filepath.Ext(path)
-		if !info.IsDir() {
-			if ext == ".go" && !strings.HasSuffix(path, "_test.go") {
-				currentModulePath := resolveModule(path, moduleRoots)
-				if currentModulePath == "" {
-					currentModulePath, err = calculateModule(remoteGitUri, localGitRoot, path)
-					if err != nil {
-						return err
-					}
-				}
-				analysis, err := analyzeModule(localGitRoot, path, currentModulePath)
-				if err != nil {
-					return err
-				}
-				if analysis != nil {
-					analyses = append(analyses, analysis)
-				}
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	return analyses
-}
-
-func calculateModule(remoteGitUri string, localGitRoot string, path string) (string, error) {
+func calculateModuleIdentifier(remoteGitUri string, localGitRoot string, path string) (string, error) {
 	internalPath, err := filepath.Rel(localGitRoot, filepath.Dir(path))
 	if err != nil {
 		return "", err
@@ -157,22 +159,22 @@ func calculateModule(remoteGitUri string, localGitRoot string, path string) (str
 	return remoteGitUrlBase + "/" + internalPath, nil
 }
 
-func analyzeModule(gitRoot string, path string, currentModulePath string) (*File, error) {
+func parseModule(sourceRootPath string, sourceFilePath string, moduleIdentifier string) (*File, error) {
 	fs := token.NewFileSet()
-	goSourceFile, err := parser.ParseFile(fs, path, nil, parser.ParseComments)
+	goSourceFile, err := parser.ParseFile(fs, sourceFilePath, nil, parser.ParseComments)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("%s\n", path)
+	fmt.Printf("%s\n", sourceFilePath)
 	analysis := analyze(goSourceFile)
 	if analysis != nil {
-		relPath, err := filepath.Rel(gitRoot, path)
+		relPath, err := filepath.Rel(sourceRootPath, sourceFilePath)
 		if err != nil {
 			return nil, err
 		}
-		relPath = alignPaths(currentModulePath, relPath)
+		relPath = alignPaths(moduleIdentifier, relPath)
 		analysis.Location = relPath
-		analysis.Module = currentModulePath
+		analysis.Module = moduleIdentifier
 		return analysis, nil
 	}
 	return nil, nil
