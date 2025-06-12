@@ -45,6 +45,7 @@ type Tag struct {
 	Options  []string `json:"options,omitempty"`
 }
 
+// AnalyzeSourceRoot analyzes a local git repository and extracts all types with struct tags usually associated with config files
 func AnalyzeSourceRoot(sourcePaths []string, destinationPath string) error {
 	analyses := make([]*File, 0)
 	for _, sourcePath := range sourcePaths {
