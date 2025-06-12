@@ -153,7 +153,10 @@ func analyze(goFile *ast.File) *File {
 	imports := make([]*Import, 0)
 	structs := map[string]*Struct{}
 	aliases := map[string]string{}
-	fileDoc := strings.TrimSuffix(goFile.Doc.Text(), "\n")
+	fileDoc := ""
+	if goFile.Doc != nil {
+		fileDoc = strings.TrimSuffix(goFile.Doc.Text(), "\n")
+	}
 	for _, x := range goFile.Imports {
 		imp := &Import{
 			Path: strings.Trim(x.Path.Value, "\""),
@@ -166,8 +169,14 @@ func analyze(goFile *ast.File) *File {
 	ast.Inspect(goFile, func(n ast.Node) bool {
 		switch typedNode := n.(type) {
 		case *ast.TypeSpec:
-			doc := strings.TrimSuffix(typedNode.Doc.Text(), "\n")
-			comm := strings.TrimSuffix(typedNode.Comment.Text(), "\n")
+			doc := ""
+			if typedNode.Doc != nil {
+				doc = strings.TrimSuffix(typedNode.Doc.Text(), "\n")
+			}
+			comm := ""
+			if typedNode.Comment != nil {
+				comm = strings.TrimSuffix(typedNode.Comment.Text(), "\n")
+			}
 			typeIdentifier := typedNode.Name.Name
 			//varParams := typeExpr.TypeParams
 			if typedNode.Assign.IsValid() {
@@ -220,8 +229,14 @@ func handleStruct(st *ast.StructType) *Struct {
 						tagResults = parseTags(tag)
 					}
 					for _, name := range field.Names {
-						doc := field.Doc.Text()
-						comment := field.Comment.Text()
+						var doc string
+						if field.Doc != nil {
+							doc = field.Doc.Text()
+						}
+						var comment string
+						if field.Comment != nil {
+							comment = field.Comment.Text()
+						}
 						fieldAnalyses[name.Name] = &Field{
 							Tags:          tagResults,
 							GoType:        typ,
