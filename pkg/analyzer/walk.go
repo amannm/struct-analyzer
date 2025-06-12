@@ -1,10 +1,10 @@
-package gitutil
+package analyzer
 
 import (
 	"io"
 	"os"
 
-	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
@@ -17,7 +17,7 @@ func WalkRemoteBlobs(remoteURI string, visitor func(path string, contents []byte
 	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(tempDir)
+	defer func() { _ = os.RemoveAll(tempDir) }()
 
 	repo, err := git.PlainClone(tempDir, false, &git.CloneOptions{URL: remoteURI})
 	if err != nil {
@@ -44,7 +44,7 @@ func WalkRemoteBlobs(remoteURI string, visitor func(path string, contents []byte
 		if err != nil {
 			return err
 		}
-		defer r.Close()
+		defer func() { _ = r.Close() }()
 		data, err := io.ReadAll(r)
 		if err != nil {
 			return err
