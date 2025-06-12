@@ -45,19 +45,12 @@ type Tag struct {
 	Options  []string `json:"options,omitempty"`
 }
 
-// AnalyzeRemoteRepos clones the provided remote repositories and analyzes their
-// contents. The analysis is written to destinationPath in JSON format.
-func AnalyzeRemoteRepos(remoteURIs []string, destinationPath string) error {
+// AnalyzeRepositories analyzes a local git repository and extracts all types with struct tags usually associated with config files
+func AnalyzeRepositories(sourcePaths []string, destinationPath string) error {
 	analyses := make([]*File, 0)
-	for _, uri := range remoteURIs {
-		roots, err := locateRemoteModuleRoots(uri)
-		if err != nil {
-			return err
-		}
-		result, err := doRemoteAnalyze(uri, roots)
-		if err != nil {
-			return err
-		}
+	for _, sourcePath := range sourcePaths {
+		roots := locateModuleRoots(sourcePath)
+		result := doAnalyze(sourcePath, roots)
 		analyses = append(analyses, result...)
 	}
 	content, err := json.MarshalIndent(analyses, "", "  ")
@@ -362,47 +355,4 @@ func alignPaths(base string, other string) string {
 		}
 	}
 	return other
-}
-
-func locateRemoteModuleRoots(remoteURI string) (map[string]string, error) {
-	results := map[string]string{}
-	err := WalkRemoteBlobs(remoteURI, func(path string, contents []byte) error {
-		if filepath.Base(path) == "go.mod" {
-			modulePath := modfile.ModulePath(contents)
-			results[filepath.Dir(path)] = modulePath
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return results, nil
-}
-
-func doRemoteAnalyze(remoteURI string, moduleRoots map[string]string) ([]*File, error) {
-	analyses := make([]*File, 0)
-	err := WalkRemoteBlobs(remoteURI, func(path string, contents []byte) error {
-		ext := filepath.Ext(path)
-		if ext == ".go" && !strings.HasSuffix(path, "_test.go") {
-			currentModulePath := resolveModule(path, moduleRoots)
-			if currentModulePath == "" {
-				return nil
-			}
-			fs := token.NewFileSet()
-			goSourceFile, err := parser.ParseFile(fs, path, contents, parser.ParseComments)
-			if err != nil {
-				return err
-			}
-			fmt.Printf("%s\n", path)
-			analysis := analyze(goSourceFile)
-			if analysis != nil {
-				relPath := alignPaths(currentModulePath, path)
-				analysis.Location = relPath
-				analysis.Module = currentModulePath
-				analyses = append(analyses, analysis)
-			}
-		}
-		return nil
-	})
-	return analyses, err
 }

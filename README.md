@@ -1,4 +1,4 @@
 # structanalyzer
 
 * analyze structs
-* `structanalyzer /path/to/some/repo`
+* `structanalyzer https://github.com/opencontainers/runtime-spec.git`
