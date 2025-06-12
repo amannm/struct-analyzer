@@ -1,4 +1,4 @@
-package analyzer
+package core
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"golang.org/x/mod/modfile"
 	"log"
+	"struct-analyzer/pkg/analyzer/git"
 
 	"os"
 	"path/filepath"
@@ -51,9 +52,9 @@ func AnalyzeRepositories(sourcePaths []string, destinationPath string) error {
 	for _, sourcePath := range sourcePaths {
 		localPath := sourcePath
 		cleanup := func() {}
-		if isRemote(sourcePath) {
+		if git.IsRemote(sourcePath) {
 			var err error
-			localPath, cleanup, err = cloneRepository(sourcePath)
+			localPath, cleanup, err = git.CloneRepository(sourcePath)
 			if err != nil {
 				return err
 			}

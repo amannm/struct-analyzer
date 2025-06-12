@@ -3,12 +3,12 @@ package struct_analyzer
 import (
 	"log"
 	"os"
-	"struct-analyzer/pkg/analyzer"
+	"struct-analyzer/pkg/analyzer/core"
 )
 
 func main() {
 	var repoUris = os.Args[1:]
-	err := analyzer.AnalyzeRepositories(repoUris, "analysis.json")
+	err := core.AnalyzeRepositories(repoUris, "analysis.json")
 	if err != nil {
 		log.Fatal(err)
 	}

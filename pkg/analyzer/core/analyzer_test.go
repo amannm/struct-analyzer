@@ -1,4 +1,4 @@
-package analyzer
+package core
 
 import (
 	"bytes"
@@ -10,11 +10,11 @@ import (
 
 func TestBasic(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
-		dest := filepath.Join(t.TempDir(), "analysis.json")
+		dest := filepath.Join("testdata", "actual.json")
 		err := AnalyzeRepositories([]string{
 			"https://github.com/opencontainers/runtime-spec",
 		}, dest)
-		expected, err := ReadJSON("analyzer_test_analysis.json")
+		expected, err := ReadJSON("testdata/expected.json")
 		if err != nil {
 			t.Fatal(err)
 		}
