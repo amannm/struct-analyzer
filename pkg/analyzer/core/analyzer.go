@@ -3,12 +3,12 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/go-git/go-git/v5"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"golang.org/x/mod/modfile"
 	"log"
-	"struct-analyzer/pkg/analyzer/git"
 
 	"os"
 	"path/filepath"
@@ -49,15 +49,24 @@ type Tag struct {
 // AnalyzeRepositories analyzes a local git repository and extracts all types with struct tags usually associated with config files
 func AnalyzeRepositories(gitUris []string, destinationPath string) error {
 	analyses := make([]*File, 0)
+	tempDirs := make([]string, 0)
+	defer func() {
+		for _, tempDir := range tempDirs {
+			_ = os.RemoveAll(tempDir)
+		}
+	}()
 	for _, gitUri := range gitUris {
-		var err error
-		localPath, cleanup, err := git.CloneRepository(gitUri)
+		tmp, err := os.MkdirTemp("", "repo-*")
 		if err != nil {
 			return err
 		}
-		defer cleanup()
-		roots := locateModuleRoots(localPath)
-		result := doAnalyze(gitUri, localPath, roots)
+		tempDirs = append(tempDirs, tmp)
+		_, err = git.PlainClone(tmp, false, &git.CloneOptions{URL: gitUri, Depth: 1})
+		if err != nil {
+			return err
+		}
+		roots := locateModuleRoots(tmp)
+		result := doAnalyze(gitUri, tmp, roots)
 		analyses = append(analyses, result...)
 	}
 	content, err := json.MarshalIndent(analyses, "", "  ")
@@ -117,12 +126,10 @@ func doAnalyze(remoteGitUri string, localGitRoot string, moduleRoots map[string]
 			if ext == ".go" && !strings.HasSuffix(path, "_test.go") {
 				currentModulePath := resolveModule(path, moduleRoots)
 				if currentModulePath == "" {
-					remoteGitUrlBase := strings.TrimPrefix(strings.TrimSuffix(remoteGitUri, ".git"), "https://")
-					internalPath, err := filepath.Rel(localGitRoot, filepath.Dir(path))
+					currentModulePath, err = calculateModule(remoteGitUri, localGitRoot, path)
 					if err != nil {
 						return err
 					}
-					currentModulePath = remoteGitUrlBase + "/" + internalPath
 				}
 				analysis, err := analyzeModule(localGitRoot, path, currentModulePath)
 				if err != nil {
@@ -139,6 +146,15 @@ func doAnalyze(remoteGitUri string, localGitRoot string, moduleRoots map[string]
 		log.Fatal(err)
 	}
 	return analyses
+}
+
+func calculateModule(remoteGitUri string, localGitRoot string, path string) (string, error) {
+	internalPath, err := filepath.Rel(localGitRoot, filepath.Dir(path))
+	if err != nil {
+		return "", err
+	}
+	remoteGitUrlBase := strings.TrimPrefix(strings.TrimSuffix(remoteGitUri, ".git"), "https://")
+	return remoteGitUrlBase + "/" + internalPath, nil
 }
 
 func analyzeModule(gitRoot string, path string, currentModulePath string) (*File, error) {
