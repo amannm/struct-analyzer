@@ -2,6 +2,7 @@ package core
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-git/go-git/v5"
 	"go/ast"
@@ -13,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 type File struct {
@@ -48,19 +50,32 @@ type Tag struct {
 
 // AnalyzeRepositories analyzes a local git repository and extracts all types with struct tags usually associated with config files
 func AnalyzeRepositories(gitUris []string, destinationPath string) error {
-	analyses := make([]*File, 0)
-	for _, gitUri := range gitUris {
-		result, err := analyzeRepository(gitUri)
-		if err != nil {
-			return err
-		}
-		analyses = append(analyses, result...)
+	resultsByRepo := make([][]*File, len(gitUris))
+	errs := make([]error, len(gitUris))
+
+	var wg sync.WaitGroup
+	wg.Add(len(gitUris))
+	for i, gitUri := range gitUris {
+		go func(idx int, uri string) {
+			defer wg.Done()
+			result, err := analyzeRepository(uri)
+			if err != nil {
+				errs[idx] = err
+				return
+			}
+			resultsByRepo[idx] = result
+		}(i, gitUri)
 	}
-	content, err := json.MarshalIndent(analyses, "", "  ")
+	wg.Wait()
+
+	content, err := json.MarshalIndent(resultsByRepo, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(destinationPath, content, 0644)
+	if err := os.WriteFile(destinationPath, content, 0644); err != nil {
+		return err
+	}
+	return errors.Join(errs...)
 }
 
 func analyzeRepository(gitUri string) ([]*File, error) {
