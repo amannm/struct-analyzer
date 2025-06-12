@@ -10,9 +10,9 @@ import (
 	"go/token"
 	"golang.org/x/mod/modfile"
 	"log"
-
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 )
@@ -48,34 +48,46 @@ type Tag struct {
 	Options  []string `json:"options,omitempty"`
 }
 
-// AnalyzeRepositories analyzes a local git repository and extracts all types with struct tags usually associated with config files
+// AnalyzeRepositories analyzes go types used in one or more remote git repositories
 func AnalyzeRepositories(gitUris []string, destinationPath string) error {
-	resultsByRepo := make([][]*File, len(gitUris))
-	errs := make([]error, len(gitUris))
-
-	var wg sync.WaitGroup
-	wg.Add(len(gitUris))
-	for i, gitUri := range gitUris {
-		go func(idx int, uri string) {
-			defer wg.Done()
-			result, err := analyzeRepository(uri)
-			if err != nil {
-				errs[idx] = err
-				return
-			}
-			resultsByRepo[idx] = result
-		}(i, gitUri)
-	}
-	wg.Wait()
-
-	content, err := json.MarshalIndent(resultsByRepo, "", "  ")
+	var taskResults [][]*File
+	taskResults, err := ExecuteAll(gitUris, func(gitUri string) ([]*File, error) {
+		return analyzeRepository(gitUri)
+	})
 	if err != nil {
 		return err
 	}
-	if err := os.WriteFile(destinationPath, content, 0644); err != nil {
+	flattenedResults := slices.Concat(taskResults...)
+	content, err := json.MarshalIndent(flattenedResults, "", "  ")
+	if err != nil {
 		return err
 	}
-	return errors.Join(errs...)
+	return os.WriteFile(destinationPath, content, 0644)
+}
+
+func ExecuteAll[T any, U any](args []T, mapper func(T) (U, error)) ([]U, error) {
+	numArgs := len(args)
+	taskResults := make([]U, numArgs)
+	errs := make([]error, numArgs)
+	var wg sync.WaitGroup
+	wg.Add(numArgs)
+	for i, arg := range args {
+		go func() {
+			defer wg.Done()
+			result, err := mapper(arg)
+			if err != nil {
+				errs[i] = err
+				return
+			}
+			taskResults[i] = result
+		}()
+	}
+	wg.Wait()
+	err := errors.Join(errs...)
+	if err != nil {
+		return nil, err
+	}
+	return taskResults, nil
 }
 
 func analyzeRepository(gitUri string) ([]*File, error) {
